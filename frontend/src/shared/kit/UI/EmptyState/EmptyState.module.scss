@@ -1,0 +1,40 @@
+.emptyState {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  min-height: 320px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 28px;
+  background: var(--bg-surface-alt);
+  text-align: center;
+}
+
+.emptyState h2 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -0.03em;
+  color: var(--text-heading);
+}
+
+.emptyState p {
+  max-width: 460px;
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-soft);
+  border-top-color: var(--text-primary);
+  border-radius: 999px;
+  animation: spin 0.85s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

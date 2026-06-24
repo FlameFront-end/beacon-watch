@@ -1,0 +1,21 @@
+
+> beaconwatch-backend@1.0.0 dev
+> tsx watch src/main.ts
+
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +8ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSseModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmCoreModule dependencies initialized[39m[38;5;3m +124ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBeaconsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBeaconsController {/beacons}:[39m[38;5;3m +5ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/beacons, POST} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/beacons, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/beacons/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/beacons, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSseController {/sse}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/sse, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 37132  - [39m24.06.2026, 14:00:14 [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +2ms[39m

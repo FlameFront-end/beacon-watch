@@ -1,0 +1,39 @@
+import type { JSX } from "react";
+import { Link } from "react-router-dom";
+
+import type { Beacon } from "@/shared/model/beacon";
+import { EmptyState } from "@/shared/kit";
+
+import { BeaconCard } from "./BeaconCard";
+import styles from "./beacon-list.module.scss";
+
+type BeaconListProps = {
+  beacons: Beacon[];
+  isLoading: boolean;
+};
+
+export function BeaconList({ beacons, isLoading }: BeaconListProps): JSX.Element {
+  if (isLoading) {
+    return (
+      <div className={styles.loadingState}>
+        <EmptyState loading title="Loading beacons" description="Fetching recent beacon history and opening the live stream." />
+      </div>
+    );
+  }
+
+  if (beacons.length === 0) {
+    return (
+      <EmptyState title="No beacons yet" description="Waiting for the first payload from the test OWA server." />
+    );
+  }
+
+  return (
+    <div className={styles.list}>
+      {beacons.map((beacon) => (
+        <Link key={beacon.id} to={`/beacons/${encodeURIComponent(beacon.id)}`} className={styles.linkCard}>
+          <BeaconCard beacon={beacon} />
+        </Link>
+      ))}
+    </div>
+  );
+}
