@@ -35,7 +35,7 @@ export function BeaconsDashboardPage(): JSX.Element {
       <StatsBar
         total={dashboard.counts.total}
         loot={dashboard.counts.loot}
-        heartbeat={dashboard.counts.heartbeat}
+        users={dashboard.counts.users}
         online={dashboard.counts.online}
         offline={dashboard.counts.offline}
       />

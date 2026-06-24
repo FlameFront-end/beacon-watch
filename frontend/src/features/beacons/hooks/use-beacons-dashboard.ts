@@ -70,16 +70,26 @@ export function useBeaconsDashboard() {
     [beacons, filter],
   );
 
-  const counts = useMemo(
-    () => ({
-      total: beacons.length,
-      loot: beacons.filter((beacon) => beacon.type === "loot").length,
-      heartbeat: beacons.filter((beacon) => beacon.type === "heartbeat").length,
-      online: beacons.filter((beacon) => beacon.heartbeat === "ONLINE").length,
-      offline: beacons.filter((beacon) => beacon.heartbeat === "OFFLINE").length,
-    }),
-    [beacons],
-  );
+  const counts = useMemo(() => {
+    const lootBeacons = beacons.filter((b) => b.type === "loot");
+    const heartbeatBeacons = beacons.filter((b) => b.type === "heartbeat");
+
+    // Count unique users (by mbxGuid) that are currently online/offline
+    const userStatusMap = new Map<string, "ONLINE" | "OFFLINE">();
+    for (const b of heartbeatBeacons) {
+      if (b.mbxGuid && b.heartbeat) {
+        userStatusMap.set(b.mbxGuid, b.heartbeat);
+      }
+    }
+
+    return {
+      total: lootBeacons.length + heartbeatBeacons.length,
+      loot: lootBeacons.length,
+      users: userStatusMap.size,
+      online: [...userStatusMap.values()].filter((s) => s === "ONLINE").length,
+      offline: [...userStatusMap.values()].filter((s) => s === "OFFLINE").length,
+    };
+  }, [beacons]);
 
   const handleClearAll = async () => {
     setIsClearing(true);

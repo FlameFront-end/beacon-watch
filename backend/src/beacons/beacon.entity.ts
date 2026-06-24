@@ -1,6 +1,5 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
 } from "typeorm";
@@ -13,7 +12,7 @@ export class BeaconEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @CreateDateColumn({ type: "timestamptz" })
+  @Column({ type: "timestamptz", default: () => "now()" })
   receivedAt!: Date;
 
   @Column({ type: "enum", enum: ["loot", "heartbeat"] })

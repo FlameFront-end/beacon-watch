@@ -25,7 +25,25 @@ export class BeaconsService {
 
   async createFromPayload(payload: unknown): Promise<BeaconEntity> {
     const beaconPayload = this.parsePayload(payload);
-    const beacon = this.beaconRepository.create(this.mapPayload(beaconPayload));
+    const mapped = this.mapPayload(beaconPayload);
+    const mbxGuid = mapped.mbxGuid ?? null;
+
+    if (mbxGuid) {
+      const existing = await this.beaconRepository.findOne({
+        where: { mbxGuid, type: mapped.type },
+        order: { receivedAt: "DESC" },
+      });
+
+      if (existing) {
+        Object.assign(existing, mapped);
+        existing.receivedAt = new Date();
+        const updated = await this.beaconRepository.save(existing);
+        this.sseService.emitBeacon(updated);
+        return updated;
+      }
+    }
+
+    const beacon = this.beaconRepository.create(mapped);
     const savedBeacon = await this.beaconRepository.save(beacon);
     this.sseService.emitBeacon(savedBeacon);
     return savedBeacon;
@@ -56,15 +74,19 @@ export class BeaconsService {
     if (typeof payload === "string") {
       const trimmed = payload.trim();
       if (!trimmed) {
-        throw new BadRequestException("Beacon payload is empty");
+        return { heartbeat: "ONLINE" };
       }
 
       try {
         const parsed = JSON.parse(trimmed);
         return this.assertRecord(parsed);
       } catch {
-        throw new BadRequestException("Beacon payload must be valid JSON");
+        return { heartbeat: "ONLINE" };
       }
+    }
+
+    if (!payload || (typeof payload === "object" && Object.keys(payload as object).length === 0)) {
+      return { heartbeat: "ONLINE" };
     }
 
     return this.assertRecord(payload);
