@@ -26,11 +26,11 @@ export class BeaconsService {
   async createFromPayload(payload: unknown): Promise<BeaconEntity> {
     const beaconPayload = this.parsePayload(payload);
     const mapped = this.mapPayload(beaconPayload);
-    const mbxGuid = mapped.mbxGuid ?? null;
 
-    if (mbxGuid) {
+    // Only upsert heartbeats — loot always creates a new record
+    if (mapped.type === "heartbeat" && mapped.mbxGuid) {
       const existing = await this.beaconRepository.findOne({
-        where: { mbxGuid, type: mapped.type },
+        where: { mbxGuid: mapped.mbxGuid, type: "heartbeat" },
         order: { receivedAt: "DESC" },
       });
 
