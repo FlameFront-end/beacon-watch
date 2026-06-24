@@ -75,9 +75,10 @@ export function useBeaconsDashboard() {
     const heartbeatBeacons = beacons.filter((b) => b.type === "heartbeat");
 
     // Count unique users (by mbxGuid) that are currently online/offline
+    // beacons are sorted DESC — first seen per mbxGuid is the latest status
     const userStatusMap = new Map<string, "ONLINE" | "OFFLINE">();
     for (const b of heartbeatBeacons) {
-      if (b.mbxGuid && b.heartbeat) {
+      if (b.mbxGuid && b.heartbeat && !userStatusMap.has(b.mbxGuid)) {
         userStatusMap.set(b.mbxGuid, b.heartbeat);
       }
     }
