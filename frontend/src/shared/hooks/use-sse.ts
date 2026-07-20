@@ -23,6 +23,7 @@ export function useSse({ onBeacon, onError }: UseSseOptions): void {
   useEffect(() => {
     const eventSource = new EventSource(
       API_ORIGIN ? `${API_ORIGIN}/sse` : "/sse",
+      { withCredentials: true },
     );
 
     eventSource.addEventListener("beacon", (event) => {

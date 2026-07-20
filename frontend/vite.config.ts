@@ -14,9 +14,10 @@ export default defineConfig({
     port: 5173,
     host: true,
     proxy: {
-      "/beacons": { target: "http://localhost:3000", secure: false, changeOrigin: true },
-      "/sse": { target: "http://localhost:3000", secure: false, changeOrigin: true },
-      "/api": { target: "http://localhost:3000", secure: false, changeOrigin: true },
+      "/beacons": { target: "http://localhost:3010", secure: false, changeOrigin: true },
+      "/auth": { target: "http://localhost:3010", secure: false, changeOrigin: true },
+      "/sse": { target: "http://localhost:3010", secure: false, changeOrigin: true },
+      "/api": { target: "http://localhost:3010", secure: false, changeOrigin: true },
     },
   },
 });

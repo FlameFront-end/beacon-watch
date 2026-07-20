@@ -79,18 +79,31 @@ Backend variables:
 - `DB_PASS`
 - `DB_NAME`
 - `PORT`
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+- `AUTH_SESSION_SECRET`
+- `AUTH_SESSION_TTL_SECONDS`
+- `AUTH_COOKIE_SECURE`
 
 Frontend variables:
 
 - `VITE_API_URL`
 
 If you prefer a single root env file, copy [.env.example](./.env.example) to `.env` in the repository root. The backend will pick it up automatically.
+Keep `VITE_API_URL` empty for local `npm run dev`; Vite proxies API requests through the frontend origin so the admin session cookie works as a same-origin cookie.
 
 ## API
 
+- `POST /auth/login`
+- `POST /auth/logout`
+- `GET /auth/me`
 - `POST /beacons`
 - `GET /beacons`
 - `GET /beacons/:id`
 - `DELETE /beacons`
 - `GET /sse`
 - `GET /api`
+
+`POST /beacons` is public so beacon senders can continue ingesting payloads.
+The dashboard, `GET/DELETE /beacons`, `GET /beacons/:id`, and `/sse` require
+the admin session cookie created by `POST /auth/login`.

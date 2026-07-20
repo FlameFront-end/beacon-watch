@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
+import { AuthModule } from "./auth/auth.module.js";
 import { BeaconsModule } from "./beacons/beacons.module.js";
 import { BeaconEntity } from "./beacons/beacon.entity.js";
 import { SseModule } from "./sse/sse.module.js";
@@ -26,6 +27,7 @@ import { SseModule } from "./sse/sse.module.js";
         autoLoadEntities: true,
       }),
     }),
+    AuthModule,
     BeaconsModule,
     SseModule,
   ],

@@ -8,7 +8,7 @@ import { AppModule } from "./app.module.js";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
-  app.enableCors({ origin: true });
+  app.enableCors({ origin: true, credentials: true });
   app.use(express.text({ type: ["text/plain", "text/*"] }));
 
   const document: OpenAPIObject = {
@@ -19,6 +19,60 @@ async function bootstrap(): Promise<void> {
       version: "1.0.0",
     },
     paths: {
+      "/auth/login": {
+        post: {
+          tags: ["auth"],
+          summary: "Create an admin session",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["username", "password"],
+                  properties: {
+                    username: { type: "string" },
+                    password: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Authenticated admin user",
+            },
+            "401": {
+              description: "Invalid credentials",
+            },
+          },
+        },
+      },
+      "/auth/logout": {
+        post: {
+          tags: ["auth"],
+          summary: "Clear the admin session",
+          responses: {
+            "204": {
+              description: "Session cleared",
+            },
+          },
+        },
+      },
+      "/auth/me": {
+        get: {
+          tags: ["auth"],
+          summary: "Get the current admin session",
+          responses: {
+            "200": {
+              description: "Authenticated admin user",
+            },
+            "401": {
+              description: "Authentication required",
+            },
+          },
+        },
+      },
       "/beacons": {
         post: {
           tags: ["beacons"],
@@ -62,6 +116,9 @@ async function bootstrap(): Promise<void> {
             "200": {
               description: "Beacon list",
             },
+            "401": {
+              description: "Authentication required",
+            },
           },
         },
         delete: {
@@ -70,6 +127,9 @@ async function bootstrap(): Promise<void> {
           responses: {
             "200": {
               description: "All beacons deleted",
+            },
+            "401": {
+              description: "Authentication required",
             },
           },
         },
@@ -96,6 +156,9 @@ async function bootstrap(): Promise<void> {
             "404": {
               description: "Beacon not found",
             },
+            "401": {
+              description: "Authentication required",
+            },
           },
         },
       },
@@ -106,6 +169,9 @@ async function bootstrap(): Promise<void> {
           responses: {
             "200": {
               description: "Server-sent event stream",
+            },
+            "401": {
+              description: "Authentication required",
             },
           },
         },

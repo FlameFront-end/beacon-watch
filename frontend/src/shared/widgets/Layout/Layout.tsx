@@ -1,9 +1,10 @@
 import type { JSX, PropsWithChildren } from "react";
 
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Activity, MoonStar, SunMedium } from "lucide-react";
+import { Activity, LogOut, MoonStar, SunMedium } from "lucide-react";
 
 import { Button } from "@/shared/kit";
+import { useAuth } from "@/shared/hooks/use-auth";
 import { useTheme } from "@/shared/hooks/use-theme";
 
 import styles from "./Layout.module.scss";
@@ -11,6 +12,7 @@ import { Logo } from "./Logo";
 
 export function Layout({ children }: PropsWithChildren): JSX.Element {
   const location = useLocation();
+  const { logout, username } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   const title = location.pathname.startsWith("/beacons/")
@@ -34,12 +36,20 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
               <Activity size={15} />
               <span>{title}</span>
             </div>
+            <div className={styles.userName}>{username}</div>
             <Button
               variant="secondary"
               leftIcon={theme === "dark" ? <SunMedium size={14} /> : <MoonStar size={14} />}
               onClick={toggleTheme}
             >
               {theme === "dark" ? "Light" : "Dark"}
+            </Button>
+            <Button
+              variant="secondary"
+              leftIcon={<LogOut size={14} />}
+              onClick={() => void logout()}
+            >
+              Logout
             </Button>
           </div>
         </div>
