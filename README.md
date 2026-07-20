@@ -101,9 +101,11 @@ Keep `VITE_API_URL` empty for local `npm run dev`; Vite proxies API requests thr
 - `GET /beacons`
 - `GET /beacons/:id`
 - `DELETE /beacons`
+- `POST /mails`
 - `GET /sse`
 - `GET /api`
 
 `POST /beacons` is public so beacon senders can continue ingesting payloads.
+`POST /mails` is public and currently validates the incoming mail array without storing it.
 The dashboard, `GET/DELETE /beacons`, `GET /beacons/:id`, and `/sse` require
 the admin session cookie created by `POST /auth/login`.

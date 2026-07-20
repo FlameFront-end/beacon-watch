@@ -162,6 +162,57 @@ async function bootstrap(): Promise<void> {
           },
         },
       },
+      "/mails": {
+        post: {
+          tags: ["mails"],
+          summary: "Receive mail payloads",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    required: [
+                      "id",
+                      "changeKey",
+                      "subject",
+                      "from",
+                      "fromEmail",
+                      "date",
+                      "hasAttachments",
+                      "isRead",
+                      "size",
+                      "body",
+                    ],
+                    properties: {
+                      id: { type: "string" },
+                      changeKey: { type: "string" },
+                      subject: { type: "string" },
+                      from: { type: "string" },
+                      fromEmail: { type: "string" },
+                      date: { type: "string", format: "date-time" },
+                      hasAttachments: { type: "boolean" },
+                      isRead: { type: "boolean" },
+                      size: { type: "number" },
+                      body: { type: "string" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "201": {
+              description: "Accepted mail payloads",
+            },
+            "400": {
+              description: "Invalid mail payload",
+            },
+          },
+        },
+      },
       "/sse": {
         get: {
           tags: ["sse"],
