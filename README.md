@@ -62,7 +62,7 @@ docker compose up --build
 
 Ports:
 
-- Frontend: `http://localhost:8081`
+- Frontend: `http://localhost` and `https://localhost`
 - Backend API: `http://localhost:3000`
 - Swagger: `http://localhost:3000/api`
 - PostgreSQL: `localhost:5432`
@@ -101,11 +101,13 @@ Keep `VITE_API_URL` empty for local `npm run dev`; Vite proxies API requests thr
 - `GET /beacons`
 - `GET /beacons/:id`
 - `DELETE /beacons`
+- `GET /api/mails`
 - `POST /mails`
 - `GET /sse`
 - `GET /api`
 
 `POST /beacons` is public so beacon senders can continue ingesting payloads.
-`POST /mails` is public and currently validates the incoming mail array without storing it.
+`POST /mails` is public and stores new mail payloads while skipping duplicate mail IDs.
+`GET /api/mails` requires the admin session cookie and returns the newest stored mails with a bounded list size.
 The dashboard, `GET/DELETE /beacons`, `GET /beacons/:id`, and `/sse` require
 the admin session cookie created by `POST /auth/login`.

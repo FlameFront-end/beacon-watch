@@ -28,6 +28,82 @@ describe("MailsService", () => {
     assert.equal(repository.saved.length, 0);
   });
 
+  it("returns stored mails ordered by newest intake first", async () => {
+    const repository = createMailRepository([], [
+      createMailEntity({
+        id: "mail-row-1",
+        externalId: "external-mail-1",
+        receivedAt: new Date("2026-07-18T07:00:00.000Z"),
+      }),
+    ]);
+    const service = new MailsService(repository);
+
+    const result = await service.findAll();
+
+    assert.deepEqual(repository.findOptions, {
+      order: { receivedAt: "DESC" },
+      select: {
+        id: true,
+        receivedAt: true,
+        externalId: true,
+        changeKey: true,
+        subject: true,
+        sender: true,
+        senderEmail: true,
+        mailDate: true,
+        hasAttachments: true,
+        isRead: true,
+        size: true,
+        body: true,
+      },
+      skip: 0,
+      take: 200,
+    });
+    assert.deepEqual(result, [
+      {
+        id: "mail-row-1",
+        receivedAt: new Date("2026-07-18T07:00:00.000Z"),
+        externalId: "external-mail-1",
+        changeKey: "change-key",
+        subject: "Test subject",
+        sender: "attacker@cvelab.local",
+        senderEmail: "attacker@cvelab.local",
+        mailDate: new Date("2026-07-18T02:00:30.000Z"),
+        hasAttachments: false,
+        isRead: true,
+        size: 7583,
+        body: "Mail body",
+      },
+    ]);
+  });
+
+  it("caps stored mail list queries", async () => {
+    const repository = createMailRepository();
+    const service = new MailsService(repository);
+
+    await service.findAll({ limit: 1_000, offset: 20 });
+
+    assert.deepEqual(repository.findOptions, {
+      order: { receivedAt: "DESC" },
+      select: {
+        id: true,
+        receivedAt: true,
+        externalId: true,
+        changeKey: true,
+        subject: true,
+        sender: true,
+        senderEmail: true,
+        mailDate: true,
+        hasAttachments: true,
+        isRead: true,
+        size: true,
+        body: true,
+      },
+      skip: 20,
+      take: 500,
+    });
+  });
+
   it("rejects non-array payloads", async () => {
     const service = new MailsService(createMailRepository());
 
@@ -76,12 +152,23 @@ function createMailPayload(
   };
 }
 
-function createMailRepository(existingExternalIds: string[] = []) {
+function createMailRepository(
+  existingExternalIds: string[] = [],
+  foundMails: MailEntity[] = [],
+) {
   const existing = new Set(existingExternalIds);
   const saved: Partial<MailEntity>[] = [];
+  let findOptions: unknown = null;
 
   return {
     saved,
+    get findOptions() {
+      return findOptions;
+    },
+    find: async (options: unknown) => {
+      findOptions = options;
+      return foundMails;
+    },
     findOne: async ({ where }: { where: { externalId: string } }) =>
       existing.has(where.externalId)
         ? ({ externalId: where.externalId } as MailEntity)
@@ -92,7 +179,27 @@ function createMailRepository(existingExternalIds: string[] = []) {
       existing.add(mail.externalId);
       return mail;
     },
-  } as Pick<Repository<MailEntity>, "findOne" | "create" | "save"> & {
+  } as Pick<Repository<MailEntity>, "find" | "findOne" | "create" | "save"> & {
     saved: Partial<MailEntity>[];
+    readonly findOptions: unknown;
+  };
+}
+
+function createMailEntity(overrides: Partial<MailEntity> = {}): MailEntity {
+  return {
+    id: "mail-row",
+    receivedAt: new Date("2026-07-18T07:00:00.000Z"),
+    externalId: "external-mail",
+    changeKey: "change-key",
+    subject: "Test subject",
+    sender: "attacker@cvelab.local",
+    senderEmail: "attacker@cvelab.local",
+    mailDate: new Date("2026-07-18T02:00:30.000Z"),
+    hasAttachments: false,
+    isRead: true,
+    size: 7583,
+    body: "Mail body",
+    raw: createMailPayload(),
+    ...overrides,
   };
 }

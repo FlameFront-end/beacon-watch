@@ -1,65 +1,70 @@
 .page {
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
 
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 24px;
-  align-items: end;
+  gap: 16px;
+  align-items: center;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: clamp(22px, 4vw, 34px);
-  background: var(--bg-surface-alt);
+  border-radius: 6px;
+  padding: 16px;
+  background: var(--bg-surface);
   box-shadow: var(--surface-shadow);
 }
 
 .hero h1 {
   margin: 0;
   color: var(--text-heading);
-  font-size: clamp(34px, 6vw, 64px);
-  line-height: 0.92;
-  letter-spacing: -0.07em;
+  font-size: clamp(20px, 3vw, 28px);
+  line-height: 1.05;
+  letter-spacing: 0;
 }
 
 .hero p {
   max-width: 680px;
-  margin: 14px 0 0;
+  margin: 8px 0 0;
   color: var(--text-muted);
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .heroStatus {
   display: grid;
-  justify-items: end;
-  gap: 4px;
-  min-width: 150px;
+  justify-items: start;
+  gap: 5px;
+  min-width: 96px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  padding: 10px 12px;
 }
 
 .heroStatus span {
   color: var(--text-heading);
-  font-size: clamp(42px, 7vw, 82px);
-  font-weight: 850;
-  line-height: 0.85;
-  letter-spacing: -0.08em;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: 0;
 }
 
 .heroStatus small {
+  order: -1;
   color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
 }
 
 .controlPanel {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 12px;
+  gap: 10px;
+  padding: 10px;
 }
 
 .errorPanel {

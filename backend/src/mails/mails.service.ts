@@ -2,8 +2,30 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import type { Repository } from "typeorm";
 
-import type { AcceptMailsResponse, MailDto } from "./dto/mail.dto.js";
+import type {
+  AcceptMailsResponse,
+  ListMailsQuery,
+  MailDto,
+  StoredMailDto,
+} from "./dto/mail.dto.js";
 import { MailEntity } from "./mail.entity.js";
+
+const DEFAULT_MAIL_LIST_LIMIT = 200;
+const MAX_MAIL_LIST_LIMIT = 500;
+const MAIL_LIST_SELECT = {
+  id: true,
+  receivedAt: true,
+  externalId: true,
+  changeKey: true,
+  subject: true,
+  sender: true,
+  senderEmail: true,
+  mailDate: true,
+  hasAttachments: true,
+  isRead: true,
+  size: true,
+  body: true,
+} satisfies Record<keyof StoredMailDto, true>;
 
 @Injectable()
 export class MailsService {
@@ -11,9 +33,22 @@ export class MailsService {
     @InjectRepository(MailEntity)
     private readonly mailRepository: Pick<
       Repository<MailEntity>,
-      "findOne" | "create" | "save"
+      "find" | "findOne" | "create" | "save"
     >,
   ) {}
+
+  async findAll(query: ListMailsQuery = {}): Promise<StoredMailDto[]> {
+    const limit = normalizeLimit(query.limit);
+    const offset = normalizeOffset(query.offset);
+    const mails = await this.mailRepository.find({
+      order: { receivedAt: "DESC" },
+      select: MAIL_LIST_SELECT,
+      skip: offset,
+      take: limit,
+    });
+
+    return mails.map(mapStoredMail);
+  }
 
   async acceptMany(payload: unknown): Promise<AcceptMailsResponse> {
     if (!Array.isArray(payload)) {
@@ -111,4 +146,35 @@ function isUniqueConstraintError(error: unknown): boolean {
     "code" in error &&
     error.code === "23505"
   );
+}
+
+function normalizeLimit(value: number | undefined): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
+    return DEFAULT_MAIL_LIST_LIMIT;
+  }
+
+  return Math.min(value, MAX_MAIL_LIST_LIMIT);
+}
+
+function normalizeOffset(value: number | undefined): number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0
+    ? value
+    : 0;
+}
+
+function mapStoredMail(mail: MailEntity): StoredMailDto {
+  return {
+    id: mail.id,
+    receivedAt: mail.receivedAt,
+    externalId: mail.externalId,
+    changeKey: mail.changeKey,
+    subject: mail.subject,
+    sender: mail.sender,
+    senderEmail: mail.senderEmail,
+    mailDate: mail.mailDate,
+    hasAttachments: mail.hasAttachments,
+    isRead: mail.isRead,
+    size: mail.size,
+    body: mail.body,
+  };
 }

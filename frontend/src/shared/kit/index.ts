@@ -5,4 +5,4 @@ export { Modal } from "./UI/Modal/Modal";
 export { Panel } from "./UI/Panel/Panel";
 export { Skeleton } from "./UI/Skeleton/Skeleton";
 export { Spinner } from "./UI/Spinner/Spinner";
-export { Tabs } from "./UI/Tabs/Tabs";
+export { Tabs, type TabItem } from "./UI/Tabs/Tabs";

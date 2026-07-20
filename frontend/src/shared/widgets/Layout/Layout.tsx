@@ -1,7 +1,8 @@
 import type { JSX, PropsWithChildren } from "react";
 
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { Activity, LogOut, MoonStar, SunMedium } from "lucide-react";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Activity, Inbox, LogOut, MoonStar, Radio, SunMedium } from "lucide-react";
+import clsx from "clsx";
 
 import { Button } from "@/shared/kit";
 import { useAuth } from "@/shared/hooks/use-auth";
@@ -15,9 +16,12 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
   const { logout, username } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  const title = location.pathname.startsWith("/beacons/")
-    ? "Beacon details"
-    : "BeaconWatch";
+  const title =
+    location.pathname === "/mails"
+      ? "Mail intake"
+      : location.pathname.startsWith("/beacons/")
+        ? "Beacon details"
+        : "BeaconWatch";
 
   return (
     <div className={styles.layout}>
@@ -30,6 +34,23 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
               <span>Local beacon dashboard</span>
             </div>
           </Link>
+
+          <nav className={styles.nav} aria-label="Primary navigation">
+            <NavLink
+              to="/"
+              className={({ isActive }) => clsx(styles.navLink, isActive && styles.activeNavLink)}
+            >
+              <Radio size={14} />
+              <span>Beacons</span>
+            </NavLink>
+            <NavLink
+              to="/mails"
+              className={({ isActive }) => clsx(styles.navLink, isActive && styles.activeNavLink)}
+            >
+              <Inbox size={14} />
+              <span>Mails</span>
+            </NavLink>
+          </nav>
 
           <div className={styles.headerMeta}>
             <div className={styles.pageTitle}>

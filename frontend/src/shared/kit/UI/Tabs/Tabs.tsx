@@ -24,15 +24,14 @@ export function Tabs<T extends string>({
   ariaLabel,
 }: TabsProps<T>): JSX.Element {
   return (
-    <div className={styles.tabs} role="tablist" aria-label={ariaLabel}>
+    <div className={styles.tabs} role="group" aria-label={ariaLabel}>
       {items.map((item) => {
         const isActive = item.id === value;
         return (
           <button
             key={item.id}
             type="button"
-            role="tab"
-            aria-selected={isActive}
+            aria-pressed={isActive}
             disabled={item.disabled}
             className={clsx(styles.tab, isActive && styles.active, item.disabled && styles.disabled)}
             onClick={() => onChange(item.id)}

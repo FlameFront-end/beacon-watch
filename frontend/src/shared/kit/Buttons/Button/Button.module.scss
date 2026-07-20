@@ -3,12 +3,13 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 34px;
+  min-height: 32px;
   border: 1px solid transparent;
   border-radius: 6px;
-  padding: 0.55rem 0.9rem;
+  padding: 0.45rem 0.78rem;
   font: inherit;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -65,8 +66,8 @@
 }
 
 .danger {
-  background: transparent;
-  border-color: var(--danger-color);
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
   color: var(--danger-color);
 
   &:hover:not(:disabled) {

@@ -5,6 +5,7 @@ import { Layout } from "@/shared/widgets/Layout/Layout";
 import { LoginPage } from "@/features/auth/pages/Login/Login.page";
 import { BeaconDetailsPage } from "@/features/beacons/pages/BeaconDetails/BeaconDetails.page";
 import { BeaconsDashboardPage } from "@/features/beacons/pages/BeaconsDashboard/BeaconsDashboard.page";
+import { MailsDashboardPage } from "@/features/mails/pages/MailsDashboard/MailsDashboard.page";
 import { RequireAuth } from "./RequireAuth";
 
 export const router = createBrowserRouter([
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
       {
         path: "/beacons/:beaconId",
         element: <BeaconDetailsPage />,
+      },
+      {
+        path: "/mails",
+        element: <MailsDashboardPage />,
       },
       {
         path: "*",

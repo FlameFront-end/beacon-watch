@@ -15,13 +15,13 @@ export function BeaconsDashboardPage(): JSX.Element {
     <div className={styles.page}>
       <section className={styles.hero}>
         <div>
-          <h1>Beacon intake</h1>
-          <p>Monitor loot, heartbeat status, mailbox hints, cookies, and raw payloads from the test OWA environment.</p>
+          <h1>Events</h1>
+          <p>Beacon payloads, heartbeat state, mailbox hints, cookies, and raw request bodies.</p>
         </div>
 
         <div className={styles.heroStatus}>
+          <small>Total</small>
           <span>{dashboard.counts.total}</span>
-          <small>captured events</small>
         </div>
       </section>
 

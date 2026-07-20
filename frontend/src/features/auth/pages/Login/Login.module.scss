@@ -3,47 +3,46 @@
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  background:
-    linear-gradient(135deg, rgb(15 23 42 / 0.04), transparent 38%),
-    var(--bg-page);
+  background: var(--bg-page);
 }
 
 .panel {
   width: min(100%, 380px);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--bg-surface);
-  padding: 1.5rem;
+  box-shadow: var(--surface-shadow);
+  padding: 1.25rem;
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
 
   h1 {
     margin: 0;
     color: var(--text-heading);
-    font-size: 1.35rem;
+    font-size: 1.1rem;
     line-height: 1.1;
   }
 
   p {
     margin: 0.25rem 0 0;
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: 0.82rem;
   }
 }
 
 .icon {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
   display: grid;
   place-items: center;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-subtle);
+  border-radius: 6px;
+  background: var(--bg-muted);
   color: var(--text-primary);
 }
 
@@ -57,15 +56,15 @@
   gap: 0.45rem;
 
   span {
-    color: var(--text-secondary);
-    font-size: 0.84rem;
-    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 500;
   }
 
   input {
     width: 100%;
-    min-height: 42px;
-    border: 1px solid var(--border-solid);
+    min-height: 38px;
+    border: 1px solid var(--border);
     border-radius: 6px;
     background: var(--bg-solid);
     color: var(--text-primary);
@@ -85,7 +84,7 @@
   border-radius: 6px;
   background: var(--danger-bg);
   color: var(--danger-color);
-  padding: 0.65rem 0.75rem;
-  font-size: 0.88rem;
-  font-weight: 650;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 500;
 }

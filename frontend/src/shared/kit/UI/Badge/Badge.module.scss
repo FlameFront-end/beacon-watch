@@ -7,10 +7,11 @@
   flex-shrink: 0;
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 0.25rem 0.55rem;
+  min-height: 22px;
+  padding: 0 0.5rem;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-weight: 500;
+  letter-spacing: 0;
   white-space: nowrap;
 }
 

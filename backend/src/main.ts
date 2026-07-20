@@ -162,6 +162,43 @@ async function bootstrap(): Promise<void> {
           },
         },
       },
+      "/api/mails": {
+        get: {
+          tags: ["mails"],
+          summary: "List stored mail payloads",
+          parameters: [
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              schema: {
+                type: "integer",
+                minimum: 1,
+                maximum: 500,
+                default: 200,
+              },
+            },
+            {
+              name: "offset",
+              in: "query",
+              required: false,
+              schema: {
+                type: "integer",
+                minimum: 0,
+                default: 0,
+              },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Stored mail payloads",
+            },
+            "401": {
+              description: "Authentication required",
+            },
+          },
+        },
+      },
       "/mails": {
         post: {
           tags: ["mails"],

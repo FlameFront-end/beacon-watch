@@ -1,18 +1,19 @@
 .tabs {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   overflow-x: auto;
 }
 
 .tab {
   border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 0.5rem 0.78rem;
-  background: transparent;
+  border-radius: 6px;
+  min-height: 32px;
+  padding: 0 0.7rem;
+  background: var(--bg-surface);
   color: var(--text-muted);
   font: inherit;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -31,13 +32,13 @@
 }
 
 .active {
-  border-color: var(--text-primary);
-  background: var(--text-primary);
-  color: var(--bg-page);
+  border-color: var(--border-solid);
+  background: var(--bg-muted);
+  color: var(--text-primary);
 
   &:hover:not(:disabled) {
-    border-color: var(--text-primary);
-    color: var(--bg-page);
+    border-color: var(--border-solid);
+    color: var(--text-primary);
   }
 }
 

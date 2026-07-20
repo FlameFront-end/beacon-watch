@@ -1,14 +1,16 @@
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(5, minmax(140px, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .statCard {
   display: grid;
-  gap: 12px;
-  min-height: 116px;
-  padding: 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 62px;
+  padding: 12px;
   overflow: hidden;
 }
 
@@ -17,11 +19,11 @@
 }
 
 .statCard strong {
-  align-self: end;
-  font-size: clamp(30px, 4vw, 42px);
-  letter-spacing: -0.04em;
+  justify-self: end;
+  font-size: 22px;
+  letter-spacing: 0;
   color: var(--text-heading);
-  line-height: 0.9;
+  line-height: 1;
 }
 
 @media (max-width: 900px) {

@@ -1,19 +1,19 @@
 .page {
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
 
 .meta {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  padding: 18px;
+  gap: 10px;
+  padding: 14px;
 }
 
 .label {
   color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -23,7 +23,7 @@
   overflow-wrap: anywhere;
   color: var(--text-heading);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .backLink {
@@ -37,7 +37,7 @@
   color: var(--button-secondary-color);
   text-decoration: none;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
 
   &:hover {
     border-color: var(--button-secondary-hover-border);
