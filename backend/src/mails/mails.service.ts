@@ -51,18 +51,20 @@ export class MailsService {
   }
 
   async acceptMany(payload: unknown): Promise<AcceptMailsResponse> {
-    if (!Array.isArray(payload)) {
+    const mailPayload = parseMailPayload(payload);
+
+    if (!Array.isArray(mailPayload)) {
       throw new BadRequestException("Mail payload must be a JSON array");
     }
 
-    for (const mail of payload) {
+    for (const mail of mailPayload) {
       this.assertMail(mail);
     }
 
     let accepted = 0;
     let skipped = 0;
 
-    for (const mail of payload) {
+    for (const mail of mailPayload) {
       const existingMail = await this.mailRepository.findOne({
         where: { externalId: mail.id },
       });
@@ -129,6 +131,18 @@ export class MailsService {
 
 function isString(value: unknown): value is string {
   return typeof value === "string";
+}
+
+function parseMailPayload(payload: unknown): unknown {
+  if (typeof payload !== "string") {
+    return payload;
+  }
+
+  try {
+    return JSON.parse(payload) as unknown;
+  } catch {
+    throw new BadRequestException("Mail payload must be a JSON array");
+  }
 }
 
 function isValidDateString(value: unknown): value is string {

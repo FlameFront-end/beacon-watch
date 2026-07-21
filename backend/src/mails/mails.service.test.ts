@@ -18,6 +18,16 @@ describe("MailsService", () => {
     assert.equal(repository.saved.length, 1);
   });
 
+  it("saves a text/plain JSON mail array", async () => {
+    const repository = createMailRepository();
+    const service = new MailsService(repository);
+
+    const result = await service.acceptMany(JSON.stringify([createMailPayload()]));
+
+    assert.deepEqual(result, { accepted: 1, skipped: 0 });
+    assert.equal(repository.saved.length, 1);
+  });
+
   it("skips mails that already exist by external id", async () => {
     const repository = createMailRepository(["mail-id"]);
     const service = new MailsService(repository);
