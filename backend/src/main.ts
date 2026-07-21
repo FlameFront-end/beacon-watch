@@ -6,10 +6,12 @@ import { SwaggerModule, type OpenAPIObject } from "@nestjs/swagger";
 
 import { AppModule } from "./app.module.js";
 
+const TEXT_BODY_LIMIT = process.env.TEXT_BODY_LIMIT ?? "10mb";
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   app.enableCors({ origin: true, credentials: true });
-  app.use(express.text({ type: ["text/plain", "text/*"] }));
+  app.use(express.text({ type: ["text/plain", "text/*"], limit: TEXT_BODY_LIMIT }));
 
   const document: OpenAPIObject = {
     openapi: "3.0.0",
