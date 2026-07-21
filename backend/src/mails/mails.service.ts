@@ -33,7 +33,7 @@ export class MailsService {
     @InjectRepository(MailEntity)
     private readonly mailRepository: Pick<
       Repository<MailEntity>,
-      "find" | "findOne" | "create" | "save"
+      "find" | "findOne" | "create" | "save" | "delete" | "clear"
     >,
   ) {}
 
@@ -88,6 +88,14 @@ export class MailsService {
     }
 
     return { accepted, skipped };
+  }
+
+  async deleteOne(id: string): Promise<void> {
+    await this.mailRepository.delete({ id });
+  }
+
+  async deleteAll(): Promise<void> {
+    await this.mailRepository.clear();
   }
 
   private assertMail(payload: unknown): asserts payload is MailDto {

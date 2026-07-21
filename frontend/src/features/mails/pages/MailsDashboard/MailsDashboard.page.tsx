@@ -1,5 +1,5 @@
 import type { JSX } from "react";
-import { ChevronsDown, MailOpen, Paperclip, Search } from "lucide-react";
+import { ChevronsDown, MailOpen, Paperclip, Search, Trash2 } from "lucide-react";
 import clsx from "clsx";
 
 import { Badge, Button, EmptyState, Panel, Tabs, type TabItem } from "@/shared/kit";
@@ -57,6 +57,20 @@ export function MailsDashboardPage(): JSX.Element {
             onChange={(event) => dashboard.setQuery(event.target.value)}
           />
         </label>
+
+        <Button
+          variant="danger"
+          isLoading={dashboard.isDeletingAll}
+          leftIcon={<Trash2 size={15} aria-hidden="true" />}
+          disabled={dashboard.mails.length === 0}
+          onClick={() => {
+            if (window.confirm("Delete all stored mails?")) {
+              void dashboard.removeAllMails();
+            }
+          }}
+        >
+          Delete all
+        </Button>
       </Panel>
 
       {dashboard.error ? (
@@ -71,7 +85,9 @@ export function MailsDashboardPage(): JSX.Element {
         selectedMail={dashboard.selectedMail}
         selectedMailId={dashboard.selectedMailId}
         isLoading={dashboard.isLoading}
+        deletingMailId={dashboard.deletingMailId}
         onSelect={dashboard.setSelectedMailId}
+        onDelete={dashboard.removeMail}
       />
 
       {dashboard.hasMoreMails ? (
@@ -111,7 +127,9 @@ type MailWorkspaceProps = {
   readonly selectedMail: Mail | null;
   readonly selectedMailId: string | null;
   readonly isLoading: boolean;
+  readonly deletingMailId: string | null;
   readonly onSelect: (mailId: string) => void;
+  readonly onDelete: (mailId: string) => void;
 };
 
 function MailWorkspace({
@@ -119,7 +137,9 @@ function MailWorkspace({
   selectedMail,
   selectedMailId,
   isLoading,
+  deletingMailId,
   onSelect,
+  onDelete,
 }: MailWorkspaceProps): JSX.Element {
   if (isLoading) {
     return (
@@ -153,7 +173,13 @@ function MailWorkspace({
         ))}
       </Panel>
 
-      {selectedMail ? <MailDetail mail={selectedMail} /> : null}
+      {selectedMail ? (
+        <MailDetail
+          mail={selectedMail}
+          isDeleting={deletingMailId === selectedMail.id}
+          onDelete={onDelete}
+        />
+      ) : null}
     </div>
   );
 }
@@ -194,9 +220,11 @@ function MailListItem({
 
 type MailDetailProps = {
   readonly mail: Mail;
+  readonly isDeleting: boolean;
+  readonly onDelete: (mailId: string) => void;
 };
 
-function MailDetail({ mail }: MailDetailProps): JSX.Element {
+function MailDetail({ mail, isDeleting, onDelete }: MailDetailProps): JSX.Element {
   return (
     <Panel className={styles.detailPanel}>
       <div className={styles.detailHeader}>
@@ -212,6 +240,18 @@ function MailDetail({ mail }: MailDetailProps): JSX.Element {
             {mail.isRead ? "Read" : "Unread"}
           </Badge>
           {mail.hasAttachments ? <Badge tone="success">Attachment</Badge> : null}
+          <Button
+            variant="danger"
+            isLoading={isDeleting}
+            leftIcon={<Trash2 size={15} aria-hidden="true" />}
+            onClick={() => {
+              if (window.confirm("Delete this mail?")) {
+                void onDelete(mail.id);
+              }
+            }}
+          >
+            Delete
+          </Button>
         </div>
       </div>
 

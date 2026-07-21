@@ -19,3 +19,11 @@ export async function getMails({
 
   return response.data;
 }
+
+export async function deleteMail(mailId: string): Promise<void> {
+  await http.delete(`/api/mails/${encodeURIComponent(mailId)}`);
+}
+
+export async function deleteAllMails(): Promise<void> {
+  await http.delete("/api/mails");
+}

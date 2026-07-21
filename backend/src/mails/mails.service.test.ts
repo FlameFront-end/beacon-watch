@@ -114,6 +114,24 @@ describe("MailsService", () => {
     });
   });
 
+  it("deletes one stored mail by id", async () => {
+    const repository = createMailRepository();
+    const service = new MailsService(repository);
+
+    await service.deleteOne("mail-row-1");
+
+    assert.deepEqual(repository.deletedIds, ["mail-row-1"]);
+  });
+
+  it("deletes all stored mails", async () => {
+    const repository = createMailRepository();
+    const service = new MailsService(repository);
+
+    await service.deleteAll();
+
+    assert.equal(repository.clearCalls, 1);
+  });
+
   it("rejects non-array payloads", async () => {
     const service = new MailsService(createMailRepository());
 
@@ -168,12 +186,18 @@ function createMailRepository(
 ) {
   const existing = new Set(existingExternalIds);
   const saved: Partial<MailEntity>[] = [];
+  const deletedIds: string[] = [];
   let findOptions: unknown = null;
+  let clearCalls = 0;
 
   return {
     saved,
+    deletedIds,
     get findOptions() {
       return findOptions;
+    },
+    get clearCalls() {
+      return clearCalls;
     },
     find: async (options: unknown) => {
       findOptions = options;
@@ -189,9 +213,21 @@ function createMailRepository(
       existing.add(mail.externalId);
       return mail;
     },
-  } as Pick<Repository<MailEntity>, "find" | "findOne" | "create" | "save"> & {
+    delete: async ({ id }: { id: string }) => {
+      deletedIds.push(id);
+      return { raw: [], affected: 1 };
+    },
+    clear: async () => {
+      clearCalls += 1;
+    },
+  } as Pick<
+    Repository<MailEntity>,
+    "find" | "findOne" | "create" | "save" | "delete" | "clear"
+  > & {
     saved: Partial<MailEntity>[];
+    deletedIds: string[];
     readonly findOptions: unknown;
+    readonly clearCalls: number;
   };
 }
 

@@ -200,6 +200,43 @@ async function bootstrap(): Promise<void> {
             },
           },
         },
+        delete: {
+          tags: ["mails"],
+          summary: "Delete all stored mail payloads",
+          responses: {
+            "204": {
+              description: "All mail payloads deleted",
+            },
+            "401": {
+              description: "Authentication required",
+            },
+          },
+        },
+      },
+      "/api/mails/{id}": {
+        delete: {
+          tags: ["mails"],
+          summary: "Delete one stored mail payload",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: {
+                type: "string",
+                format: "uuid",
+              },
+            },
+          ],
+          responses: {
+            "204": {
+              description: "Mail payload deleted",
+            },
+            "401": {
+              description: "Authentication required",
+            },
+          },
+        },
       },
       "/mails": {
         post: {

@@ -1,8 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Inject,
+  Param,
   Post,
   Query,
   UseGuards,
@@ -40,6 +43,20 @@ export class StoredMailsController {
     @Query("offset") offset?: unknown,
   ): Promise<StoredMailDto[]> {
     return this.mailsService.findAll(parseListMailsQuery(limit, offset));
+  }
+
+  @Delete(":id")
+  @HttpCode(204)
+  @UseGuards(SessionAuthGuard)
+  async deleteOne(@Param("id") id: string): Promise<void> {
+    await this.mailsService.deleteOne(id);
+  }
+
+  @Delete()
+  @HttpCode(204)
+  @UseGuards(SessionAuthGuard)
+  async deleteAll(): Promise<void> {
+    await this.mailsService.deleteAll();
   }
 }
 

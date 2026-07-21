@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { getMails, MAIL_PAGE_LIMIT } from "@/shared/api/mails";
+import {
+  deleteAllMails,
+  deleteMail,
+  getMails,
+  MAIL_PAGE_LIMIT,
+} from "@/shared/api/mails";
 import type { Mail, MailFilter } from "@/shared/model/mail";
 
 const DEFAULT_FILTER: MailFilter = "all";
@@ -13,6 +18,8 @@ export function useMailsDashboard() {
   const [selectedMailId, setSelectedMailId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [deletingMailId, setDeletingMailId] = useState<string | null>(null);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [hasMoreMails, setHasMoreMails] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,6 +86,39 @@ export function useMailsDashboard() {
     void loadMailsPage(mails.length, "append");
   }, [hasMoreMails, isLoading, isLoadingMore, loadMailsPage, mails.length]);
 
+  const removeMail = useCallback(async (mailId: string): Promise<void> => {
+    setDeletingMailId(mailId);
+
+    try {
+      await deleteMail(mailId);
+      setMails((currentMails) => currentMails.filter((mail) => mail.id !== mailId));
+      setSelectedMailId((currentMailId) =>
+        currentMailId === mailId ? null : currentMailId,
+      );
+      setError(null);
+    } catch (deleteError: unknown) {
+      setError(deleteError instanceof Error ? deleteError.message : "Failed to delete mail");
+    } finally {
+      setDeletingMailId(null);
+    }
+  }, []);
+
+  const removeAllMails = useCallback(async (): Promise<void> => {
+    setIsDeletingAll(true);
+
+    try {
+      await deleteAllMails();
+      setMails([]);
+      setSelectedMailId(null);
+      setHasMoreMails(false);
+      setError(null);
+    } catch (deleteError: unknown) {
+      setError(deleteError instanceof Error ? deleteError.message : "Failed to delete mails");
+    } finally {
+      setIsDeletingAll(false);
+    }
+  }, []);
+
   const visibleMails = useMemo(
     () => filterMails(mails, filter, query),
     [mails, filter, query],
@@ -112,8 +152,12 @@ export function useMailsDashboard() {
     setQuery,
     isLoading,
     isLoadingMore,
+    deletingMailId,
+    isDeletingAll,
     hasMoreMails,
     loadMoreMails,
+    removeMail,
+    removeAllMails,
     error,
     counts,
   };
