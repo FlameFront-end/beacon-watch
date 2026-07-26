@@ -109,7 +109,18 @@ async function bootstrap(): Promise<void> {
           },
         },
       },
-      "/beacons": {
+      "/api/services/{serviceKey}/beacons": {
+        parameters: [
+          {
+            name: "serviceKey",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+              enum: ["owa"],
+            },
+          },
+        ],
         post: {
           tags: ["beacons"],
           summary: "Receive a beacon payload",
@@ -170,11 +181,20 @@ async function bootstrap(): Promise<void> {
           },
         },
       },
-      "/beacons/{id}": {
+      "/api/services/{serviceKey}/beacons/{id}": {
         get: {
           tags: ["beacons"],
           summary: "Get one beacon",
           parameters: [
+            {
+              name: "serviceKey",
+              in: "path",
+              required: true,
+              schema: {
+                type: "string",
+                enum: ["owa"],
+              },
+            },
             {
               name: "id",
               in: "path",
@@ -198,137 +218,20 @@ async function bootstrap(): Promise<void> {
           },
         },
       },
-      "/api/mails": {
-        get: {
-          tags: ["mails"],
-          summary: "List stored mail payloads",
-          parameters: [
-            {
-              name: "limit",
-              in: "query",
-              required: false,
-              schema: {
-                type: "integer",
-                minimum: 1,
-                maximum: 500,
-                default: 200,
-              },
-            },
-            {
-              name: "offset",
-              in: "query",
-              required: false,
-              schema: {
-                type: "integer",
-                minimum: 0,
-                default: 0,
-              },
-            },
-          ],
-          responses: {
-            "200": {
-              description: "Stored mail payloads",
-            },
-            "401": {
-              description: "Authentication required",
-            },
-          },
-        },
-        delete: {
-          tags: ["mails"],
-          summary: "Delete all stored mail payloads",
-          responses: {
-            "204": {
-              description: "All mail payloads deleted",
-            },
-            "401": {
-              description: "Authentication required",
-            },
-          },
-        },
-      },
-      "/api/mails/send": {
-        post: {
-          tags: ["mails"],
-          summary: "Send a plain-text or raw HTML message through SMTP",
-          requestBody: {
+      "/api/services/{serviceKey}/emails": {
+        parameters: [
+          {
+            name: "serviceKey",
+            in: "path",
             required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["to", "subject"],
-                  properties: {
-                    to: { type: "string", format: "email" },
-                    subject: { type: "string" },
-                    text: {
-                      type: "string",
-                      description:
-                        "Plain-text body. Generated from html when omitted.",
-                    },
-                    html: {
-                      type: "string",
-                      description: "Optional raw HTML representation of text",
-                    },
-                  },
-                },
-              },
+            schema: {
+              type: "string",
+              enum: ["owa"],
             },
           },
-          responses: {
-            "204": { description: "Message accepted by SMTP" },
-            "400": { description: "Invalid message" },
-            "401": { description: "Authentication required" },
-          },
-        },
-      },
-      "/api/settings/smtp": {
-        get: {
-          tags: ["settings"],
-          summary: "Get SMTP settings without the password",
-          responses: {
-            "200": { description: "Current SMTP settings" },
-            "401": { description: "Authentication required" },
-          },
-        },
-        put: {
-          tags: ["settings"],
-          summary: "Update SMTP settings",
-          responses: {
-            "200": { description: "Updated SMTP settings" },
-            "400": { description: "Invalid SMTP settings" },
-            "401": { description: "Authentication required" },
-          },
-        },
-      },
-      "/api/mails/{id}": {
-        delete: {
-          tags: ["mails"],
-          summary: "Delete one stored mail payload",
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: {
-                type: "string",
-                format: "uuid",
-              },
-            },
-          ],
-          responses: {
-            "204": {
-              description: "Mail payload deleted",
-            },
-            "401": {
-              description: "Authentication required",
-            },
-          },
-        },
-      },
-      "/mails": {
+        ],
         post: {
-          tags: ["mails"],
+          tags: ["emails"],
           summary: "Receive mail payloads",
           requestBody: {
             required: true,
@@ -376,11 +279,157 @@ async function bootstrap(): Promise<void> {
             },
           },
         },
-      },
-      "/sse": {
         get: {
-          tags: ["sse"],
+          tags: ["emails"],
+          summary: "List stored mail payloads",
+          parameters: [
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              schema: {
+                type: "integer",
+                minimum: 1,
+                maximum: 500,
+                default: 200,
+              },
+            },
+            {
+              name: "offset",
+              in: "query",
+              required: false,
+              schema: {
+                type: "integer",
+                minimum: 0,
+                default: 0,
+              },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Stored mail payloads",
+            },
+            "401": {
+              description: "Authentication required",
+            },
+          },
+        },
+        delete: {
+          tags: ["emails"],
+          summary: "Delete all stored mail payloads",
+          responses: {
+            "204": {
+              description: "All mail payloads deleted",
+            },
+            "401": {
+              description: "Authentication required",
+            },
+          },
+        },
+      },
+      "/api/smtp/send": {
+        post: {
+          tags: ["smtp"],
+          summary: "Send a plain-text or raw HTML message through SMTP",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["to", "subject"],
+                  properties: {
+                    to: { type: "string", format: "email" },
+                    subject: { type: "string" },
+                    text: {
+                      type: "string",
+                      description:
+                        "Plain-text body. Generated from html when omitted.",
+                    },
+                    html: {
+                      type: "string",
+                      description: "Optional raw HTML representation of text",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "204": { description: "Message accepted by SMTP" },
+            "400": { description: "Invalid message" },
+            "401": { description: "Authentication required" },
+          },
+        },
+      },
+      "/api/smtp/settings": {
+        get: {
+          tags: ["smtp"],
+          summary: "Get SMTP settings without the password",
+          responses: {
+            "200": { description: "Current SMTP settings" },
+            "401": { description: "Authentication required" },
+          },
+        },
+        put: {
+          tags: ["smtp"],
+          summary: "Update SMTP settings",
+          responses: {
+            "200": { description: "Updated SMTP settings" },
+            "400": { description: "Invalid SMTP settings" },
+            "401": { description: "Authentication required" },
+          },
+        },
+      },
+      "/api/services/{serviceKey}/emails/{id}": {
+        delete: {
+          tags: ["emails"],
+          summary: "Delete one stored mail payload",
+          parameters: [
+            {
+              name: "serviceKey",
+              in: "path",
+              required: true,
+              schema: {
+                type: "string",
+                enum: ["owa"],
+              },
+            },
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: {
+                type: "string",
+                format: "uuid",
+              },
+            },
+          ],
+          responses: {
+            "204": {
+              description: "Mail payload deleted",
+            },
+            "401": {
+              description: "Authentication required",
+            },
+          },
+        },
+      },
+      "/api/services/{serviceKey}/events": {
+        get: {
+          tags: ["events"],
           summary: "Open an SSE stream",
+          parameters: [
+            {
+              name: "serviceKey",
+              in: "path",
+              required: true,
+              schema: {
+                type: "string",
+                enum: ["owa"],
+              },
+            },
+          ],
           responses: {
             "200": {
               description: "Server-sent event stream",

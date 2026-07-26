@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useRoute } from "wouter";
 
 import { getBeacon } from "@/shared/api/beacons";
+import type { ServiceKey } from "@/shared/config/services";
 import type { Beacon } from "@/shared/model/beacon";
 import { EmptyState, Panel } from "@/shared/kit";
 import { formatLocalDateTime } from "@/shared/lib/format";
@@ -10,8 +11,12 @@ import { formatLocalDateTime } from "@/shared/lib/format";
 import { BeaconCard } from "../../components/BeaconCard";
 import styles from "./BeaconDetails.module.scss";
 
-export function BeaconDetailsPage(): JSX.Element {
-  const [, params] = useRoute("/beacons/:beaconId");
+type BeaconDetailsPageProps = {
+  readonly serviceKey: ServiceKey;
+};
+
+export function BeaconDetailsPage({ serviceKey }: BeaconDetailsPageProps): JSX.Element {
+  const [, params] = useRoute(`/${serviceKey}/beacons/:beaconId`);
   const beaconId = params?.beaconId ?? "";
   const [beacon, setBeacon] = useState<Beacon | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,7 +25,7 @@ export function BeaconDetailsPage(): JSX.Element {
   useEffect(() => {
     let isMounted = true;
 
-    void getBeacon(beaconId)
+    void getBeacon(serviceKey, beaconId)
       .then((loadedBeacon) => {
         if (!isMounted) {
           return;
@@ -44,7 +49,7 @@ export function BeaconDetailsPage(): JSX.Element {
     return () => {
       isMounted = false;
     };
-  }, [beaconId]);
+  }, [beaconId, serviceKey]);
 
   if (isLoading) {
     return <EmptyState loading title="Loading beacon" description="Fetching the selected payload." />;
@@ -53,7 +58,7 @@ export function BeaconDetailsPage(): JSX.Element {
   if (error || !beacon) {
     return (
       <EmptyState title="Beacon not found" description={error ?? "The requested beacon could not be loaded."}>
-        <Link className={styles.backLink} href="/">
+        <Link className={styles.backLink} href={`/${serviceKey}/beacons`}>
           Back to dashboard
         </Link>
       </EmptyState>

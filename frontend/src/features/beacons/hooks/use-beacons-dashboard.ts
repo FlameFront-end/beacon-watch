@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { clearBeacons, getBeacons } from "@/shared/api/beacons";
+import type { ServiceKey } from "@/shared/config/services";
 import type { Beacon, BeaconFilter } from "@/shared/model/beacon";
 import { useSse } from "@/shared/hooks/use-sse";
 
@@ -22,7 +23,7 @@ function matchesFilter(beacon: Beacon, filter: BeaconFilter): boolean {
   return beacon.type === filter;
 }
 
-export function useBeaconsDashboard() {
+export function useBeaconsDashboard(serviceKey: ServiceKey) {
   const [beacons, setBeacons] = useState<Beacon[]>([]);
   const [filter, setFilter] = useState<BeaconFilter>(DEFAULT_FILTER);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,7 +33,7 @@ export function useBeaconsDashboard() {
   useEffect(() => {
     let isMounted = true;
 
-    void getBeacons()
+    void getBeacons(serviceKey)
       .then((loadedBeacons) => {
         if (!isMounted) {
           return;
@@ -57,9 +58,10 @@ export function useBeaconsDashboard() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [serviceKey]);
 
   useSse({
+    serviceKey,
     onBeacon: (beacon) => {
       setBeacons((currentBeacons) => [beacon, ...currentBeacons.filter((currentBeacon) => currentBeacon.id !== beacon.id)]);
     },
@@ -95,7 +97,7 @@ export function useBeaconsDashboard() {
   const handleClearAll = async () => {
     setIsClearing(true);
     try {
-      await clearBeacons();
+      await clearBeacons(serviceKey);
       setBeacons([]);
       setError(null);
     } catch (clearError: unknown) {

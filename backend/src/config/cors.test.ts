@@ -31,10 +31,28 @@ describe("parseCorsOrigins", () => {
 
 describe("isPublicIngestCorsRequest", () => {
   it("allows only public ingestion posts and their preflight requests", () => {
-    assert.equal(isPublicIngestCorsRequest("POST", "/beacons"), true);
-    assert.equal(isPublicIngestCorsRequest("POST", "/mails"), true);
-    assert.equal(isPublicIngestCorsRequest("OPTIONS", "/beacons", "POST"), true);
-    assert.equal(isPublicIngestCorsRequest("GET", "/beacons"), false);
+    assert.equal(
+      isPublicIngestCorsRequest("POST", "/api/services/owa/beacons"),
+      true,
+    );
+    assert.equal(
+      isPublicIngestCorsRequest("POST", "/api/services/owa/emails"),
+      true,
+    );
+    assert.equal(
+      isPublicIngestCorsRequest(
+        "OPTIONS",
+        "/api/services/owa/beacons",
+        "POST",
+      ),
+      true,
+    );
+    assert.equal(
+      isPublicIngestCorsRequest("GET", "/api/services/owa/beacons"),
+      false,
+    );
+    assert.equal(isPublicIngestCorsRequest("POST", "/beacons"), false);
+    assert.equal(isPublicIngestCorsRequest("POST", "/mails"), false);
     assert.equal(isPublicIngestCorsRequest("OPTIONS", "/auth/login", "POST"), false);
   });
 });

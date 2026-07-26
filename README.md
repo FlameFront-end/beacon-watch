@@ -109,9 +109,10 @@ SMTP connection security is explicit:
 Do not enable both TLS variables together. SMTP authentication is rejected
 unless one encrypted mode is selected. `CORS_ORIGINS` is empty for the
 same-origin UI; set it to a comma-separated list of exact HTTP(S) origins only
-when a separate frontend origin is required. Public `POST /beacons` and
-`POST /mails` ingestion accepts cross-origin requests without credentials;
-admin and authentication routes do not.
+when a separate frontend origin is required. Public service ingestion accepts
+cross-origin requests without credentials only for
+`POST /api/services/owa/beacons` and `POST /api/services/owa/emails`; admin and
+authentication routes do not.
 
 Frontend variables:
 
@@ -125,25 +126,35 @@ Keep `VITE_API_URL` empty for local `npm run dev`; Vite proxies API requests thr
 - `POST /auth/login`
 - `POST /auth/logout`
 - `GET /auth/me`
-- `POST /beacons`
-- `GET /beacons`
-- `GET /beacons/:id`
-- `DELETE /beacons`
-- `GET /api/mails`
-- `POST /api/mails/send`
-- `POST /mails`
-- `GET /sse`
+- `POST /api/services/:serviceKey/beacons`
+- `GET /api/services/:serviceKey/beacons`
+- `GET /api/services/:serviceKey/beacons/:id`
+- `DELETE /api/services/:serviceKey/beacons`
+- `POST /api/services/:serviceKey/emails`
+- `GET /api/services/:serviceKey/emails`
+- `DELETE /api/services/:serviceKey/emails`
+- `DELETE /api/services/:serviceKey/emails/:id`
+- `GET /api/services/:serviceKey/events`
+- `POST /api/smtp/send`
+- `GET /api/smtp/settings`
+- `PUT /api/smtp/settings`
 - `GET /api`
 
-`POST /beacons` is public so beacon senders can continue ingesting payloads.
-`POST /mails` is public and stores new mail payloads while skipping duplicate mail IDs.
-`GET /api/mails` requires the admin session cookie and returns the newest stored mails with a bounded list size.
-`POST /api/mails/send` requires the admin session cookie and sends a message
-through the configured SMTP server. The optional `html` field is sent unchanged
-used as the HTML representation.
+`serviceKey` is validated against the static service catalog. The current
+catalog contains only `owa`, so the UI routes are `/owa/beacons`,
+`/owa/beacons/:beaconId`, and `/owa/emails`. `/owa` redirects to
+`/owa/beacons`; `/` is the service selection page.
+
+`POST /api/services/owa/beacons` is public so beacon senders can ingest
+payloads. `POST /api/services/owa/emails` is public and stores new mail
+payloads while skipping duplicate mail IDs within the OWA service scope.
+Service-scoped reads, deletes, and event streams require the admin session
+cookie created by `POST /auth/login`.
+
+SMTP is global across services. `POST /api/smtp/send` requires the admin
+session cookie and sends a message through the configured SMTP server. The
+optional `html` field is sent unchanged as the HTML representation.
 Safe inline email styles, table layout, and HTTPS/CID images are preserved.
 Scripts, event handlers, unsafe URLs, and unsafe CSS are removed. If `text` is
 omitted, the backend generates a plain-text alternative from the submitted
 HTML.
-The dashboard, `GET/DELETE /beacons`, `GET /beacons/:id`, and `/sse` require
-the admin session cookie created by `POST /auth/login`.

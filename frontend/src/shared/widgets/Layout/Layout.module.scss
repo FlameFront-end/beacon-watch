@@ -109,7 +109,11 @@
 .main {
   width: min(1240px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 20px 0 40px;
+  padding: 0 0 40px;
+}
+
+.content {
+  padding-top: 20px;
 }
 
 @media (max-width: 720px) {
@@ -131,7 +135,7 @@
     overflow-x: auto;
   }
 
-  .main {
+  .content {
     padding-top: 16px;
   }
 }

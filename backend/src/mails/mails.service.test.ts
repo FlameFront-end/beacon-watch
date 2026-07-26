@@ -12,17 +12,18 @@ describe("MailsService", () => {
     const repository = createMailRepository();
     const service = new MailsService(repository);
 
-    const result = await service.acceptMany([createMailPayload()]);
+    const result = await service.acceptMany("owa", [createMailPayload()]);
 
     assert.deepEqual(result, { accepted: 1, skipped: 0 });
     assert.equal(repository.saved.length, 1);
+    assert.equal(repository.saved[0]?.serviceKey, "owa");
   });
 
   it("saves a text/plain JSON mail array", async () => {
     const repository = createMailRepository();
     const service = new MailsService(repository);
 
-    const result = await service.acceptMany(JSON.stringify([createMailPayload()]));
+    const result = await service.acceptMany("owa", JSON.stringify([createMailPayload()]));
 
     assert.deepEqual(result, { accepted: 1, skipped: 0 });
     assert.equal(repository.saved.length, 1);
@@ -32,7 +33,7 @@ describe("MailsService", () => {
     const repository = createMailRepository(["mail-id"]);
     const service = new MailsService(repository);
 
-    const result = await service.acceptMany([createMailPayload({ id: "mail-id" })]);
+    const result = await service.acceptMany("owa", [createMailPayload({ id: "mail-id" })]);
 
     assert.deepEqual(result, { accepted: 0, skipped: 1 });
     assert.equal(repository.saved.length, 0);
@@ -48,9 +49,10 @@ describe("MailsService", () => {
     ]);
     const service = new MailsService(repository);
 
-    const result = await service.findAll();
+    const result = await service.findAll("owa");
 
     assert.deepEqual(repository.findOptions, {
+      where: { serviceKey: "owa" },
       order: { receivedAt: "DESC" },
       select: {
         id: true,
@@ -91,9 +93,10 @@ describe("MailsService", () => {
     const repository = createMailRepository();
     const service = new MailsService(repository);
 
-    await service.findAll({ limit: 1_000, offset: 20 });
+    await service.findAll("owa", { limit: 1_000, offset: 20 });
 
     assert.deepEqual(repository.findOptions, {
+      where: { serviceKey: "owa" },
       order: { receivedAt: "DESC" },
       select: {
         id: true,
@@ -118,25 +121,27 @@ describe("MailsService", () => {
     const repository = createMailRepository();
     const service = new MailsService(repository);
 
-    await service.deleteOne("mail-row-1");
+    await service.deleteOne("owa", "mail-row-1");
 
-    assert.deepEqual(repository.deletedIds, ["mail-row-1"]);
+    assert.deepEqual(repository.deleteCriteria, [
+      { serviceKey: "owa", id: "mail-row-1" },
+    ]);
   });
 
   it("deletes all stored mails", async () => {
     const repository = createMailRepository();
     const service = new MailsService(repository);
 
-    await service.deleteAll();
+    await service.deleteAll("owa");
 
-    assert.equal(repository.clearCalls, 1);
+    assert.deepEqual(repository.deleteCriteria, [{ serviceKey: "owa" }]);
   });
 
   it("rejects non-array payloads", async () => {
     const service = new MailsService(createMailRepository());
 
     await assert.rejects(
-      () => service.acceptMany({ id: "mail-id" }),
+      () => service.acceptMany("owa", { id: "mail-id" }),
       BadRequestException,
     );
   });
@@ -145,7 +150,7 @@ describe("MailsService", () => {
     const service = new MailsService(createMailRepository());
 
     await assert.rejects(
-      () => service.acceptMany([{ id: "mail-id", size: "7583" }]),
+      () => service.acceptMany("owa", [{ id: "mail-id", size: "7583" }]),
       BadRequestException,
     );
   });
@@ -186,26 +191,26 @@ function createMailRepository(
 ) {
   const existing = new Set(existingExternalIds);
   const saved: Partial<MailEntity>[] = [];
-  const deletedIds: string[] = [];
+  const deleteCriteria: unknown[] = [];
   let findOptions: unknown = null;
-  let clearCalls = 0;
 
   return {
     saved,
-    deletedIds,
+    deleteCriteria,
     get findOptions() {
       return findOptions;
-    },
-    get clearCalls() {
-      return clearCalls;
     },
     find: async (options: unknown) => {
       findOptions = options;
       return foundMails;
     },
-    findOne: async ({ where }: { where: { externalId: string } }) =>
-      existing.has(where.externalId)
-        ? ({ externalId: where.externalId } as MailEntity)
+    findOne: async ({
+      where,
+    }: {
+      where: { serviceKey: string; externalId: string };
+    }) =>
+      where.serviceKey === "owa" && existing.has(where.externalId)
+        ? ({ serviceKey: where.serviceKey, externalId: where.externalId } as MailEntity)
         : null,
     create: (mail: Partial<MailEntity>) => mail as MailEntity,
     save: async (mail: MailEntity) => {
@@ -213,27 +218,24 @@ function createMailRepository(
       existing.add(mail.externalId);
       return mail;
     },
-    delete: async ({ id }: { id: string }) => {
-      deletedIds.push(id);
+    delete: async (criteria: unknown) => {
+      deleteCriteria.push(criteria);
       return { raw: [], affected: 1 };
-    },
-    clear: async () => {
-      clearCalls += 1;
     },
   } as Pick<
     Repository<MailEntity>,
-    "find" | "findOne" | "create" | "save" | "delete" | "clear"
+    "find" | "findOne" | "create" | "save" | "delete"
   > & {
     saved: Partial<MailEntity>[];
-    deletedIds: string[];
+    deleteCriteria: unknown[];
     readonly findOptions: unknown;
-    readonly clearCalls: number;
   };
 }
 
 function createMailEntity(overrides: Partial<MailEntity> = {}): MailEntity {
   return {
     id: "mail-row",
+    serviceKey: "owa",
     receivedAt: new Date("2026-07-18T07:00:00.000Z"),
     externalId: "external-mail",
     changeKey: "change-key",

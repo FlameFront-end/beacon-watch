@@ -1,7 +1,12 @@
 import type { Beacon, BeaconFilter } from "@/shared/model/beacon";
+import type { ServiceKey } from "@/shared/config/services";
 import { http } from "./axios-instance";
+import { serviceBeaconsPath } from "./service-api-paths";
 
-export async function getBeacons(filter?: BeaconFilter): Promise<Beacon[]> {
+export async function getBeacons(
+  serviceKey: ServiceKey,
+  filter?: BeaconFilter,
+): Promise<Beacon[]> {
   const queryType =
     filter && filter !== "all"
       ? filter === "online" || filter === "offline"
@@ -9,7 +14,7 @@ export async function getBeacons(filter?: BeaconFilter): Promise<Beacon[]> {
         : filter
       : undefined;
 
-  const response = await http.get<Beacon[]>("/beacons", {
+  const response = await http.get<Beacon[]>(serviceBeaconsPath(serviceKey), {
     params: queryType ? { type: queryType } : undefined,
   });
   const beacons = response.data;
@@ -25,11 +30,16 @@ export async function getBeacons(filter?: BeaconFilter): Promise<Beacon[]> {
   return beacons;
 }
 
-export async function getBeacon(beaconId: string): Promise<Beacon> {
-  const response = await http.get<Beacon>(`/beacons/${encodeURIComponent(beaconId)}`);
+export async function getBeacon(
+  serviceKey: ServiceKey,
+  beaconId: string,
+): Promise<Beacon> {
+  const response = await http.get<Beacon>(
+    serviceBeaconsPath(serviceKey, beaconId),
+  );
   return response.data;
 }
 
-export async function clearBeacons(): Promise<void> {
-  await http.delete("/beacons");
+export async function clearBeacons(serviceKey: ServiceKey): Promise<void> {
+  await http.delete(serviceBeaconsPath(serviceKey));
 }

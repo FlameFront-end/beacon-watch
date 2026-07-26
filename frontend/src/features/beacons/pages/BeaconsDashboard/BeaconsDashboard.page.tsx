@@ -1,6 +1,7 @@
 import type { JSX } from "react";
 
 import { Button, Panel } from "@/shared/kit";
+import type { ServiceKey } from "@/shared/config/services";
 
 import { BeaconList } from "../../components/BeaconList";
 import { FilterBar } from "../../components/FilterBar";
@@ -8,8 +9,12 @@ import { StatsBar } from "../../components/StatsBar";
 import { useBeaconsDashboard } from "../../hooks/use-beacons-dashboard";
 import styles from "./BeaconsDashboard.module.scss";
 
-export function BeaconsDashboardPage(): JSX.Element {
-  const dashboard = useBeaconsDashboard();
+type BeaconsDashboardPageProps = {
+  readonly serviceKey: ServiceKey;
+};
+
+export function BeaconsDashboardPage({ serviceKey }: BeaconsDashboardPageProps): JSX.Element {
+  const dashboard = useBeaconsDashboard(serviceKey);
 
   return (
     <div className={styles.page}>
@@ -47,7 +52,11 @@ export function BeaconsDashboardPage(): JSX.Element {
         </Panel>
       ) : null}
 
-      <BeaconList beacons={dashboard.visibleBeacons} isLoading={dashboard.isLoading} />
+      <BeaconList
+        serviceKey={serviceKey}
+        beacons={dashboard.visibleBeacons}
+        isLoading={dashboard.isLoading}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import type {
   StoredMailDto,
 } from "./dto/mail.dto.js";
 import { MailEntity } from "./mail.entity.js";
+import type { ServiceKey } from "../services/service-catalog.js";
 
 const DEFAULT_MAIL_LIST_LIMIT = 200;
 const MAX_MAIL_LIST_LIMIT = 500;
@@ -33,14 +34,18 @@ export class MailsService {
     @InjectRepository(MailEntity)
     private readonly mailRepository: Pick<
       Repository<MailEntity>,
-      "find" | "findOne" | "create" | "save" | "delete" | "clear"
+      "find" | "findOne" | "create" | "save" | "delete"
     >,
   ) {}
 
-  async findAll(query: ListMailsQuery = {}): Promise<StoredMailDto[]> {
+  async findAll(
+    serviceKey: ServiceKey,
+    query: ListMailsQuery = {},
+  ): Promise<StoredMailDto[]> {
     const limit = normalizeLimit(query.limit);
     const offset = normalizeOffset(query.offset);
     const mails = await this.mailRepository.find({
+      where: { serviceKey },
       order: { receivedAt: "DESC" },
       select: MAIL_LIST_SELECT,
       skip: offset,
@@ -50,7 +55,10 @@ export class MailsService {
     return mails.map(mapStoredMail);
   }
 
-  async acceptMany(payload: unknown): Promise<AcceptMailsResponse> {
+  async acceptMany(
+    serviceKey: ServiceKey,
+    payload: unknown,
+  ): Promise<AcceptMailsResponse> {
     const mailPayload = parseMailPayload(payload);
 
     if (!Array.isArray(mailPayload)) {
@@ -66,14 +74,17 @@ export class MailsService {
 
     for (const mail of mailPayload) {
       const existingMail = await this.mailRepository.findOne({
-        where: { externalId: mail.id },
+        where: { serviceKey, externalId: mail.id },
       });
       if (existingMail) {
         skipped += 1;
         continue;
       }
 
-      const mailEntity = this.mailRepository.create(this.mapMail(mail));
+      const mailEntity = this.mailRepository.create({
+        ...this.mapMail(mail),
+        serviceKey,
+      });
       try {
         await this.mailRepository.save(mailEntity);
         accepted += 1;
@@ -90,12 +101,12 @@ export class MailsService {
     return { accepted, skipped };
   }
 
-  async deleteOne(id: string): Promise<void> {
-    await this.mailRepository.delete({ id });
+  async deleteOne(serviceKey: ServiceKey, id: string): Promise<void> {
+    await this.mailRepository.delete({ serviceKey, id });
   }
 
-  async deleteAll(): Promise<void> {
-    await this.mailRepository.clear();
+  async deleteAll(serviceKey: ServiceKey): Promise<void> {
+    await this.mailRepository.delete({ serviceKey });
   }
 
   private assertMail(payload: unknown): asserts payload is MailDto {

@@ -13,6 +13,10 @@ import {
 import { ApiTags } from "@nestjs/swagger";
 
 import { SessionAuthGuard } from "../auth/session-auth.guard.js";
+import {
+  requireRegisteredService,
+  type ServiceKey,
+} from "../services/service-catalog.js";
 import type {
   AcceptMailsResponse,
   ListMailsQuery,
@@ -22,54 +26,73 @@ import { MailsService } from "./mails.service.js";
 import { MailSendingService } from "./mail-sending.service.js";
 
 @ApiTags("mails")
-@Controller()
+@Controller("api/services/:serviceKey/emails")
 export class MailsIngestController {
   constructor(@Inject(MailsService) private readonly mailsService: MailsService) {}
 
-  @Post("mails")
-  acceptMany(@Body() body: unknown): Promise<AcceptMailsResponse> {
-    return this.mailsService.acceptMany(body);
+  @Post()
+  acceptMany(
+    @Param("serviceKey") serviceKey: string,
+    @Body() body: unknown,
+  ): Promise<AcceptMailsResponse> {
+    return this.mailsService.acceptMany(readServiceKey(serviceKey), body);
   }
 }
 
-@ApiTags("mails")
-@Controller("api/mails")
+@ApiTags("emails")
+@Controller("api/services/:serviceKey/emails")
 export class StoredMailsController {
+  constructor(@Inject(MailsService) private readonly mailsService: MailsService) {}
+
+  @Get()
+  @UseGuards(SessionAuthGuard)
+  findAll(
+    @Param("serviceKey") serviceKey: string,
+    @Query("limit") limit?: unknown,
+    @Query("offset") offset?: unknown,
+  ): Promise<StoredMailDto[]> {
+    return this.mailsService.findAll(
+      readServiceKey(serviceKey),
+      parseListMailsQuery(limit, offset),
+    );
+  }
+
+  @Delete(":id")
+  @HttpCode(204)
+  @UseGuards(SessionAuthGuard)
+  async deleteOne(
+    @Param("serviceKey") serviceKey: string,
+    @Param("id") id: string,
+  ): Promise<void> {
+    await this.mailsService.deleteOne(readServiceKey(serviceKey), id);
+  }
+
+  @Delete()
+  @HttpCode(204)
+  @UseGuards(SessionAuthGuard)
+  async deleteAll(@Param("serviceKey") serviceKey: string): Promise<void> {
+    await this.mailsService.deleteAll(readServiceKey(serviceKey));
+  }
+}
+
+@ApiTags("smtp")
+@Controller("api/smtp")
+@UseGuards(SessionAuthGuard)
+export class SmtpMailController {
   constructor(
-    @Inject(MailsService) private readonly mailsService: MailsService,
     @Inject(MailSendingService)
     private readonly mailSendingService: MailSendingService,
   ) {}
 
   @Post("send")
   @HttpCode(204)
-  @UseGuards(SessionAuthGuard)
   async send(@Body() body: unknown): Promise<void> {
     await this.mailSendingService.send(body);
   }
+}
 
-  @Get()
-  @UseGuards(SessionAuthGuard)
-  findAll(
-    @Query("limit") limit?: unknown,
-    @Query("offset") offset?: unknown,
-  ): Promise<StoredMailDto[]> {
-    return this.mailsService.findAll(parseListMailsQuery(limit, offset));
-  }
-
-  @Delete(":id")
-  @HttpCode(204)
-  @UseGuards(SessionAuthGuard)
-  async deleteOne(@Param("id") id: string): Promise<void> {
-    await this.mailsService.deleteOne(id);
-  }
-
-  @Delete()
-  @HttpCode(204)
-  @UseGuards(SessionAuthGuard)
-  async deleteAll(): Promise<void> {
-    await this.mailsService.deleteAll();
-  }
+function readServiceKey(serviceKey: string): ServiceKey {
+  return requireRegisteredService(serviceKey).key;
 }
 
 function parseListMailsQuery(

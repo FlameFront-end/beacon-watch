@@ -9,8 +9,13 @@ describe("StoredMailsController", () => {
     const service = createMailsService();
     const controller = new StoredMailsController(service);
 
-    await controller.findAll(["10", "20"] as unknown as string, ["1"] as unknown as string);
+    await controller.findAll(
+      "owa",
+      ["10", "20"] as unknown as string,
+      ["1"] as unknown as string,
+    );
 
+    assert.equal(service.serviceKey, "owa");
     assert.deepEqual(service.findAllQuery, {
       limit: undefined,
       offset: undefined,
@@ -19,15 +24,21 @@ describe("StoredMailsController", () => {
 });
 
 function createMailsService(): Pick<MailsService, "findAll"> & {
+  readonly serviceKey: string | null;
   readonly findAllQuery: unknown;
 } {
+  let serviceKey: string | null = null;
   let findAllQuery: unknown = null;
 
   return {
+    get serviceKey() {
+      return serviceKey;
+    },
     get findAllQuery() {
       return findAllQuery;
     },
-    findAll: async (query) => {
+    findAll: async (key, query) => {
+      serviceKey = key;
       findAllQuery = query;
       return [];
     },

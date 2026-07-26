@@ -11,7 +11,8 @@ export function isPublicIngestCorsRequest(
   path: string,
   requestedMethod?: string,
 ): boolean {
-  const isPublicPath = path === "/beacons" || path === "/mails";
+  const isPublicPath =
+    /^\/api\/services\/owa\/(?:beacons|emails)$/.test(path);
   return (
     isPublicPath &&
     (method === "POST" ||

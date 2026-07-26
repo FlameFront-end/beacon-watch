@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
 } from "typeorm";
 
@@ -8,9 +9,13 @@ export type BeaconType = "loot" | "heartbeat";
 export type HeartbeatState = "ONLINE" | "OFFLINE";
 
 @Entity("beacons")
+@Index("IDX_beacons_service_received", ["serviceKey", "receivedAt"])
 export class BeaconEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
+
+  @Column({ type: "varchar", default: "owa" })
+  serviceKey!: string;
 
   @Column({ type: "timestamptz", default: () => "now()" })
   receivedAt!: Date;

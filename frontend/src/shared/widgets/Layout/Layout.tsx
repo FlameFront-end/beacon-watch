@@ -1,27 +1,33 @@
 import type { JSX, PropsWithChildren } from "react";
 
 import { Link, useLocation } from "wouter";
-import { Activity, Inbox, LogOut, MoonStar, Radio, SunMedium } from "lucide-react";
+import { Activity, Home, LogOut, Mail, MoonStar, SunMedium } from "lucide-react";
 import clsx from "clsx";
 
+import { getRegisteredService } from "@/shared/config/services";
 import { Button } from "@/shared/kit";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useTheme } from "@/shared/hooks/use-theme";
 
 import styles from "./Layout.module.scss";
 import { Logo } from "./Logo";
+import { ServiceNavigation } from "../ServiceNavigation/ServiceNavigation";
 
 export function Layout({ children }: PropsWithChildren): JSX.Element {
   const [location] = useLocation();
   const { logout, username } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const serviceKey = location.split("/")[1] ?? "";
+  const activeService = getRegisteredService(serviceKey);
 
   const title =
-    location === "/mails"
-      ? "Mail intake"
-      : location.startsWith("/beacons/")
+    location === "/"
+      ? "Services"
+      : location === "/smtp"
+        ? "SMTP"
+        : location.startsWith("/owa/beacons/")
         ? "Beacon details"
-        : "BeaconWatch";
+        : activeService?.name ?? "BeaconWatch";
 
   return (
     <div className={styles.layout}>
@@ -41,16 +47,16 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
               className={clsx(styles.navLink, location === "/" && styles.activeNavLink)}
               aria-current={location === "/" ? "page" : undefined}
             >
-              <Radio size={14} />
-              <span>Beacons</span>
+              <Home size={14} aria-hidden="true" />
+              <span>Home</span>
             </Link>
             <Link
-              href="/mails"
-              className={clsx(styles.navLink, location === "/mails" && styles.activeNavLink)}
-              aria-current={location === "/mails" ? "page" : undefined}
+              href="/smtp"
+              className={clsx(styles.navLink, location === "/smtp" && styles.activeNavLink)}
+              aria-current={location === "/smtp" ? "page" : undefined}
             >
-              <Inbox size={14} />
-              <span>Mails</span>
+              <Mail size={14} aria-hidden="true" />
+              <span>SMTP</span>
             </Link>
           </nav>
 
@@ -78,7 +84,10 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
         </div>
       </header>
 
-      <main className={styles.main}>{children}</main>
+      <main className={styles.main}>
+        {activeService ? <ServiceNavigation service={activeService} /> : null}
+        <div className={styles.content}>{children}</div>
+      </main>
     </div>
   );
 }

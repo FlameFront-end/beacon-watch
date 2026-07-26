@@ -6,12 +6,13 @@ import {
   getMails,
   MAIL_PAGE_LIMIT,
 } from "@/shared/api/mails";
+import type { ServiceKey } from "@/shared/config/services";
 import type { Mail, MailFilter } from "@/shared/model/mail";
 
 const DEFAULT_FILTER: MailFilter = "all";
 type LoadMode = "replace" | "append";
 
-export function useMailsDashboard() {
+export function useMailsDashboard(serviceKey: ServiceKey) {
   const [mails, setMails] = useState<Mail[]>([]);
   const [filter, setFilter] = useState<MailFilter>(DEFAULT_FILTER);
   const [query, setQuery] = useState("");
@@ -36,7 +37,7 @@ export function useMailsDashboard() {
       }
 
       try {
-        const loadedMails = await getMails({ limit: MAIL_PAGE_LIMIT, offset });
+        const loadedMails = await getMails({ serviceKey, limit: MAIL_PAGE_LIMIT, offset });
         if (!isCurrent()) {
           return;
         }
@@ -65,7 +66,7 @@ export function useMailsDashboard() {
         }
       }
     },
-    [],
+    [serviceKey],
   );
 
   useEffect(() => {
@@ -90,7 +91,7 @@ export function useMailsDashboard() {
     setDeletingMailId(mailId);
 
     try {
-      await deleteMail(mailId);
+      await deleteMail(serviceKey, mailId);
       setMails((currentMails) => currentMails.filter((mail) => mail.id !== mailId));
       setSelectedMailId((currentMailId) =>
         currentMailId === mailId ? null : currentMailId,
@@ -101,13 +102,13 @@ export function useMailsDashboard() {
     } finally {
       setDeletingMailId(null);
     }
-  }, []);
+  }, [serviceKey]);
 
   const removeAllMails = useCallback(async (): Promise<void> => {
     setIsDeletingAll(true);
 
     try {
-      await deleteAllMails();
+      await deleteAllMails(serviceKey);
       setMails([]);
       setSelectedMailId(null);
       setHasMoreMails(false);
@@ -117,7 +118,7 @@ export function useMailsDashboard() {
     } finally {
       setIsDeletingAll(false);
     }
-  }, []);
+  }, [serviceKey]);
 
   const visibleMails = useMemo(
     () => filterMails(mails, filter, query),

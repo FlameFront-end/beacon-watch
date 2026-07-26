@@ -6,7 +6,7 @@ import {
   type PublicSmtpSettings,
 } from "./smtp-settings.service.js";
 
-@Controller("api/settings/smtp")
+@Controller("api/smtp/settings")
 @UseGuards(SessionAuthGuard)
 export class SmtpSettingsController {
   constructor(private readonly smtpSettingsService: SmtpSettingsService) {}

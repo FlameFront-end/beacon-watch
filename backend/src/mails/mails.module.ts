@@ -5,6 +5,7 @@ import { AuthModule } from "../auth/auth.module.js";
 import { MailEntity } from "./mail.entity.js";
 import {
   MailsIngestController,
+  SmtpMailController,
   StoredMailsController,
 } from "./mails.controller.js";
 import { MailsService } from "./mails.service.js";
@@ -19,7 +20,12 @@ import { SmtpSettingsEntity } from "./smtp-settings.entity.js";
 
 @Module({
   imports: [AuthModule, TypeOrmModule.forFeature([MailEntity, SmtpSettingsEntity])],
-  controllers: [MailsIngestController, StoredMailsController, SmtpSettingsController],
+  controllers: [
+    MailsIngestController,
+    StoredMailsController,
+    SmtpMailController,
+    SmtpSettingsController,
+  ],
   providers: [
     MailsService,
     MailSendingService,

@@ -11,6 +11,7 @@ import type { BeaconType } from "./beacon.entity.js";
 import { BeaconEntity } from "./beacon.entity.js";
 import type { CreateBeaconDto } from "./dto/create-beacon.dto.js";
 import { SseService } from "../sse/sse.service.js";
+import type { ServiceKey } from "../services/service-catalog.js";
 
 type BeaconPayload = Record<string, unknown>;
 
@@ -23,14 +24,17 @@ export class BeaconsService {
     private readonly sseService: SseService,
   ) {}
 
-  async createFromPayload(payload: unknown): Promise<BeaconEntity> {
+  async createFromPayload(
+    serviceKey: ServiceKey,
+    payload: unknown,
+  ): Promise<BeaconEntity> {
     const beaconPayload = this.parsePayload(payload);
-    const mapped = this.mapPayload(beaconPayload);
+    const mapped = { ...this.mapPayload(beaconPayload), serviceKey };
 
     // Only upsert heartbeats — loot always creates a new record
     if (mapped.type === "heartbeat" && mapped.mbxGuid) {
       const existing = await this.beaconRepository.findOne({
-        where: { mbxGuid: mapped.mbxGuid, type: "heartbeat" },
+        where: { serviceKey, mbxGuid: mapped.mbxGuid, type: "heartbeat" },
         order: { receivedAt: "DESC" },
       });
 
@@ -49,16 +53,21 @@ export class BeaconsService {
     return savedBeacon;
   }
 
-  async findAll(type?: BeaconType): Promise<BeaconEntity[]> {
-    const where = type ? { type } : {};
+  async findAll(
+    serviceKey: ServiceKey,
+    type?: BeaconType,
+  ): Promise<BeaconEntity[]> {
+    const where = type ? { serviceKey, type } : { serviceKey };
     return this.beaconRepository.find({
       where,
       order: { receivedAt: "DESC" },
     });
   }
 
-  async findById(id: string): Promise<BeaconEntity> {
-    const beacon = await this.beaconRepository.findOne({ where: { id } });
+  async findById(serviceKey: ServiceKey, id: string): Promise<BeaconEntity> {
+    const beacon = await this.beaconRepository.findOne({
+      where: { serviceKey, id },
+    });
     if (!beacon) {
       throw new NotFoundException(`Beacon ${id} not found`);
     }
@@ -66,8 +75,8 @@ export class BeaconsService {
     return beacon;
   }
 
-  async clearAll(): Promise<void> {
-    await this.beaconRepository.clear();
+  async clearAll(serviceKey: ServiceKey): Promise<void> {
+    await this.beaconRepository.delete({ serviceKey });
   }
 
   private parsePayload(payload: unknown): BeaconPayload {
