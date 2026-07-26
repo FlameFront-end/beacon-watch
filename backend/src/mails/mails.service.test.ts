@@ -29,6 +29,30 @@ describe("MailsService", () => {
     assert.equal(repository.saved.length, 1);
   });
 
+  it("saves a normalized Zimbra mail array", async () => {
+    const repository = createMailRepository();
+    const service = new MailsService(repository);
+    const zimbraMail = createZimbraMailPayload();
+
+    const result = await service.acceptMany("zimbra", [zimbraMail]);
+
+    assert.deepEqual(result, { accepted: 1, skipped: 0 });
+    assert.deepEqual(repository.saved[0], {
+      serviceKey: "zimbra",
+      externalId: "271",
+      changeKey: "-271",
+      subject: "CVE-2025-27915 ICS safe alert test",
+      sender: "user2",
+      senderEmail: "user2@zimbra.lab",
+      mailDate: new Date("2026-07-26T22:18:50.000Z"),
+      hasAttachments: true,
+      isRead: true,
+      size: 17240,
+      body: "CVE-2025-27915 ICS safe alert test\r\n",
+      raw: zimbraMail,
+    });
+  });
+
   it("skips mails that already exist by external id", async () => {
     const repository = createMailRepository(["mail-id"]);
     const service = new MailsService(repository);
@@ -182,6 +206,43 @@ function createMailPayload(
     size: 7583,
     body: "Mail body",
     ...overrides,
+  };
+}
+
+function createZimbraMailPayload() {
+  return {
+    id: "271",
+    conversationId: "-271",
+    subject: "CVE-2025-27915 ICS safe alert test",
+    sender: "user2@zimbra.lab",
+    senderName: "user2",
+    recipients: ["test@zimbra.lab"],
+    date: "27.07.2026, 01:18:50",
+    folderId: "2",
+    size: 17240,
+    flags: "v",
+    snippet: "CVE-2025-27915 ICS safe alert test",
+    mimeParts: [
+      {
+        part: "1",
+        contentType: "text/plain",
+        filename: null,
+        size: 36,
+        disposition: null,
+        body: true,
+        content: "CVE-2025-27915 ICS safe alert test\r\n",
+      },
+      {
+        part: "2",
+        contentType: "text/calendar",
+        filename: "cve-2025-27915-ics-safe-alert.ics",
+        size: 16286,
+        disposition: "inline",
+        body: false,
+        content: null,
+      },
+    ],
+    calendarInvites: [],
   };
 }
 

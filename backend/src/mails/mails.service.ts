@@ -28,6 +28,10 @@ const MAIL_LIST_SELECT = {
   body: true,
 } satisfies Record<keyof StoredMailDto, true>;
 
+type AcceptedMail = MailDto & {
+  readonly raw: Record<string, unknown>;
+};
+
 @Injectable()
 export class MailsService {
   constructor(
@@ -65,14 +69,12 @@ export class MailsService {
       throw new BadRequestException("Mail payload must be a JSON array");
     }
 
-    for (const mail of mailPayload) {
-      this.assertMail(mail);
-    }
+    const mails = mailPayload.map(normalizeMail);
 
     let accepted = 0;
     let skipped = 0;
 
-    for (const mail of mailPayload) {
+    for (const mail of mails) {
       const existingMail = await this.mailRepository.findOne({
         where: { serviceKey, externalId: mail.id },
       });
@@ -109,29 +111,7 @@ export class MailsService {
     await this.mailRepository.delete({ serviceKey });
   }
 
-  private assertMail(payload: unknown): asserts payload is MailDto {
-    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-      throw new BadRequestException("Each mail item must be a JSON object");
-    }
-
-    const mail = payload as Record<string, unknown>;
-    if (
-      !isString(mail.id) ||
-      !isString(mail.changeKey) ||
-      !isString(mail.subject) ||
-      !isString(mail.from) ||
-      !isString(mail.fromEmail) ||
-      !isValidDateString(mail.date) ||
-      typeof mail.hasAttachments !== "boolean" ||
-      typeof mail.isRead !== "boolean" ||
-      !isValidSize(mail.size) ||
-      !isString(mail.body)
-    ) {
-      throw new BadRequestException("Mail item has invalid shape");
-    }
-  }
-
-  private mapMail(mail: MailDto): Partial<MailEntity> {
+  private mapMail(mail: AcceptedMail): Partial<MailEntity> {
     return {
       externalId: mail.id,
       changeKey: mail.changeKey,
@@ -143,13 +123,153 @@ export class MailsService {
       isRead: mail.isRead,
       size: mail.size,
       body: mail.body,
-      raw: mail as unknown as Record<string, unknown>,
+      raw: mail.raw,
     };
   }
 }
 
 function isString(value: unknown): value is string {
   return typeof value === "string";
+}
+
+function normalizeMail(payload: unknown): AcceptedMail {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new BadRequestException("Each mail item must be a JSON object");
+  }
+
+  const mail = payload as Record<string, unknown>;
+  if (isOwaMail(mail)) {
+    return { ...mail, raw: mail };
+  }
+
+  if (isZimbraMail(mail)) {
+    return normalizeZimbraMail(mail);
+  }
+
+  throw new BadRequestException("Mail item has invalid shape");
+}
+
+function isOwaMail(mail: Record<string, unknown>): mail is MailDto {
+  return (
+    isString(mail.id) &&
+    isString(mail.changeKey) &&
+    isString(mail.subject) &&
+    isString(mail.from) &&
+    isString(mail.fromEmail) &&
+    isValidDateString(mail.date) &&
+    typeof mail.hasAttachments === "boolean" &&
+    typeof mail.isRead === "boolean" &&
+    isValidSize(mail.size) &&
+    isString(mail.body)
+  );
+}
+
+function isZimbraMail(mail: Record<string, unknown>): boolean {
+  return (
+    isString(mail.id) &&
+    isString(mail.sender) &&
+    isString(mail.date) &&
+    parseZimbraDate(mail.date) !== null &&
+    isValidSize(mail.size)
+  );
+}
+
+function normalizeZimbraMail(mail: Record<string, unknown>): AcceptedMail {
+  const mailDate = parseZimbraDate(mail.date);
+  if (!mailDate || !isString(mail.id) || !isString(mail.sender) || !isValidSize(mail.size)) {
+    throw new BadRequestException("Mail item has invalid shape");
+  }
+
+  return {
+    id: mail.id,
+    changeKey: readOptionalString(mail.conversationId) ?? mail.id,
+    subject: readOptionalString(mail.subject) ?? "",
+    from: readOptionalString(mail.senderName) ?? mail.sender,
+    fromEmail: mail.sender,
+    date: mailDate.toISOString(),
+    hasAttachments: hasZimbraAttachments(mail.mimeParts),
+    isRead: !readOptionalString(mail.flags)?.includes("u"),
+    size: mail.size,
+    body: readZimbraBody(mail),
+    raw: mail,
+  };
+}
+
+function readOptionalString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function readZimbraBody(mail: Record<string, unknown>): string {
+  const parts = Array.isArray(mail.mimeParts) ? mail.mimeParts : [];
+  const bodyPart = parts.find((part) => {
+    if (!part || typeof part !== "object" || Array.isArray(part)) {
+      return false;
+    }
+
+    const mimePart = part as Record<string, unknown>;
+    return mimePart.body === true && typeof mimePart.content === "string";
+  });
+
+  if (bodyPart && typeof bodyPart === "object" && !Array.isArray(bodyPart)) {
+    const content = (bodyPart as Record<string, unknown>).content;
+    if (typeof content === "string") {
+      return content;
+    }
+  }
+
+  const textPart = parts.find((part) => {
+    if (!part || typeof part !== "object" || Array.isArray(part)) {
+      return false;
+    }
+
+    const mimePart = part as Record<string, unknown>;
+    return mimePart.contentType === "text/plain" && typeof mimePart.content === "string";
+  });
+
+  if (textPart && typeof textPart === "object" && !Array.isArray(textPart)) {
+    const content = (textPart as Record<string, unknown>).content;
+    if (typeof content === "string") {
+      return content;
+    }
+  }
+
+  return readOptionalString(mail.snippet) ?? "";
+}
+
+function hasZimbraAttachments(value: unknown): boolean {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+
+  return value.some((part) => {
+    if (!part || typeof part !== "object" || Array.isArray(part)) {
+      return false;
+    }
+
+    const mimePart = part as Record<string, unknown>;
+    return (
+      readOptionalString(mimePart.filename) !== null ||
+      mimePart.disposition === "attachment"
+    );
+  });
+}
+
+function parseZimbraDate(value: unknown): Date | null {
+  if (!isString(value)) {
+    return null;
+  }
+
+  const match = value.match(
+    /^(\d{2})\.(\d{2})\.(\d{4}),\s*(\d{2}):(\d{2}):(\d{2})$/,
+  );
+  if (!match) {
+    return null;
+  }
+
+  const [, day, month, year, hour, minute, second] = match;
+  const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}+03:00`);
+
+  return Number.isFinite(date.getTime()) ? date : null;
 }
 
 function parseMailPayload(payload: unknown): unknown {
