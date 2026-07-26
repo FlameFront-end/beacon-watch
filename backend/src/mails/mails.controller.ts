@@ -14,7 +14,7 @@ import { ApiTags } from "@nestjs/swagger";
 
 import { SessionAuthGuard } from "../auth/session-auth.guard.js";
 import {
-  requireRegisteredService,
+  requireServiceCapability,
   type ServiceKey,
 } from "../services/service-catalog.js";
 import type {
@@ -92,7 +92,7 @@ export class SmtpMailController {
 }
 
 function readServiceKey(serviceKey: string): ServiceKey {
-  return requireRegisteredService(serviceKey).key;
+  return requireServiceCapability(serviceKey, "emails");
 }
 
 function parseListMailsQuery(

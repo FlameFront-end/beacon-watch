@@ -111,8 +111,8 @@ unless one encrypted mode is selected. `CORS_ORIGINS` is empty for the
 same-origin UI; set it to a comma-separated list of exact HTTP(S) origins only
 when a separate frontend origin is required. Public service ingestion accepts
 cross-origin requests without credentials only for
-`POST /api/services/owa/beacons` and `POST /api/services/owa/emails`; admin and
-authentication routes do not.
+`POST /api/services/owa/beacons`, `POST /api/services/owa/emails`, and
+`POST /api/services/zimbra/emails`; admin and authentication routes do not.
 
 Frontend variables:
 
@@ -141,13 +141,15 @@ Keep `VITE_API_URL` empty for local `npm run dev`; Vite proxies API requests thr
 - `GET /api`
 
 `serviceKey` is validated against the static service catalog. The current
-catalog contains only `owa`, so the UI routes are `/owa/beacons`,
-`/owa/beacons/:beaconId`, and `/owa/emails`. `/owa` redirects to
-`/owa/beacons`; `/` is the service selection page.
+catalog contains `owa` and `zimbra`. OWA supports `/owa/beacons`,
+`/owa/beacons/:beaconId`, and `/owa/emails`; `/owa` redirects to
+`/owa/beacons`. Zimbra supports only `/zimbra/emails`; `/zimbra` redirects to
+`/zimbra/emails`. `/` is the service selection page.
 
 `POST /api/services/owa/beacons` is public so beacon senders can ingest
-payloads. `POST /api/services/owa/emails` is public and stores new mail
-payloads while skipping duplicate mail IDs within the OWA service scope.
+payloads. `POST /api/services/owa/emails` and
+`POST /api/services/zimbra/emails` are public and store new mail payloads while
+skipping duplicate mail IDs within each service scope.
 Service-scoped reads, deletes, and event streams require the admin session
 cookie created by `POST /auth/login`.
 

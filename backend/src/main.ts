@@ -226,7 +226,7 @@ async function bootstrap(): Promise<void> {
             required: true,
             schema: {
               type: "string",
-              enum: ["owa"],
+              enum: ["owa", "zimbra"],
             },
           },
         ],
@@ -392,7 +392,7 @@ async function bootstrap(): Promise<void> {
               required: true,
               schema: {
                 type: "string",
-                enum: ["owa"],
+                enum: ["owa", "zimbra"],
               },
             },
             {

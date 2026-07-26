@@ -46,3 +46,10 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+@media (max-width: 720px) {
+  .tab {
+    min-height: 40px;
+    padding: 0 0.85rem;
+  }
+}

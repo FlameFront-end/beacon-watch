@@ -1,4 +1,4 @@
-export type ServiceKey = "owa";
+export type ServiceKey = "owa" | "zimbra";
 export type ServiceCapability = "beacons" | "emails";
 
 export type RegisteredService = {
@@ -15,6 +15,12 @@ export const REGISTERED_SERVICES: readonly RegisteredService[] = [
     description: "OWA beacon and captured email monitoring",
     capabilities: ["beacons", "emails"],
   },
+  {
+    key: "zimbra",
+    name: "Zimbra",
+    description: "Zimbra captured email monitoring",
+    capabilities: ["emails"],
+  },
 ];
 
 export function getRegisteredService(
@@ -29,4 +35,21 @@ export function hasServiceCapability(
 ): boolean {
   const service = getRegisteredService(serviceKey);
   return service?.capabilities.some((value) => value === capability) ?? false;
+}
+
+export function getDefaultServicePath(serviceKey: string): string {
+  const service = getRegisteredService(serviceKey);
+  if (!service) {
+    return "/";
+  }
+
+  if (service.capabilities.includes("beacons")) {
+    return `/${service.key}/beacons`;
+  }
+
+  if (service.capabilities.includes("emails")) {
+    return `/${service.key}/emails`;
+  }
+
+  return "/";
 }

@@ -2,7 +2,11 @@ import type { JSX } from "react";
 import { Link } from "wouter";
 import { ArrowRight, Mail, Radio } from "lucide-react";
 
-import { REGISTERED_SERVICES } from "@/shared/config/services";
+import {
+  getDefaultServicePath,
+  REGISTERED_SERVICES,
+  type RegisteredService,
+} from "@/shared/config/services";
 import { Badge, Panel } from "@/shared/kit";
 
 import styles from "./Services.module.scss";
@@ -22,12 +26,12 @@ export function ServicesPage(): JSX.Element {
         {REGISTERED_SERVICES.map((service) => (
           <Link
             key={service.key}
-            href={`/${service.key}/beacons`}
+            href={getDefaultServicePath(service.key)}
             className={styles.serviceLink}
           >
             <Panel className={styles.serviceCard}>
               <div className={styles.serviceIcon}>
-                <Radio size={18} aria-hidden="true" />
+                <ServiceIcon service={service} />
               </div>
               <div className={styles.serviceBody}>
                 <h2>{service.name}</h2>
@@ -60,4 +64,10 @@ export function ServicesPage(): JSX.Element {
       </Link>
     </div>
   );
+}
+
+function ServiceIcon({ service }: { readonly service: RegisteredService }): JSX.Element {
+  return service.capabilities.includes("beacons")
+    ? <Radio size={18} aria-hidden="true" />
+    : <Mail size={18} aria-hidden="true" />;
 }

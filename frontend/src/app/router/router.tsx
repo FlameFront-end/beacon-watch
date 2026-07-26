@@ -26,6 +26,8 @@ export function AppRouter(): ReactElement {
               <Route path="/owa/beacons" component={OwaBeaconsDashboardPage} />
               <Route path="/owa/beacons/:beaconId" component={OwaBeaconDetailsPage} />
               <Route path="/owa/emails" component={OwaMailsDashboardPage} />
+              <Route path="/zimbra" component={RedirectToZimbraEmails} />
+              <Route path="/zimbra/emails" component={ZimbraMailsDashboardPage} />
               <Route component={RedirectToHome} />
             </Switch>
           </Layout>
@@ -47,8 +49,16 @@ function OwaMailsDashboardPage(): ReactElement {
   return <MailsDashboardPage serviceKey="owa" />;
 }
 
+function ZimbraMailsDashboardPage(): ReactElement {
+  return <MailsDashboardPage serviceKey="zimbra" />;
+}
+
 function RedirectToOwaBeacons(): ReactElement | null {
   return <RedirectToPath path="/owa/beacons" />;
+}
+
+function RedirectToZimbraEmails(): ReactElement | null {
+  return <RedirectToPath path="/zimbra/emails" />;
 }
 
 function RedirectToHome(): ReactElement | null {

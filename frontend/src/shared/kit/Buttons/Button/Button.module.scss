@@ -74,3 +74,10 @@
     background: var(--danger-hover-bg);
   }
 }
+
+@media (max-width: 720px) {
+  .button {
+    min-height: 40px;
+    padding-inline: 0.85rem;
+  }
+}

@@ -12,7 +12,9 @@ export function isPublicIngestCorsRequest(
   requestedMethod?: string,
 ): boolean {
   const isPublicPath =
-    /^\/api\/services\/owa\/(?:beacons|emails)$/.test(path);
+    path === "/api/services/owa/beacons" ||
+    path === "/api/services/owa/emails" ||
+    path === "/api/services/zimbra/emails";
   return (
     isPublicPath &&
     (method === "POST" ||

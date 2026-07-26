@@ -67,18 +67,22 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
             </div>
             <div className={styles.userName}>{username}</div>
             <Button
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+              className={styles.iconButton}
               variant="secondary"
               leftIcon={theme === "dark" ? <SunMedium size={14} /> : <MoonStar size={14} />}
               onClick={toggleTheme}
             >
-              {theme === "dark" ? "Light" : "Dark"}
+              <span className={styles.optionalButtonText}>{theme === "dark" ? "Light" : "Dark"}</span>
             </Button>
             <Button
+              aria-label="Logout"
+              className={styles.iconButton}
               variant="secondary"
               leftIcon={<LogOut size={14} />}
               onClick={() => void logout()}
             >
-              Logout
+              <span className={styles.optionalButtonText}>Logout</span>
             </Button>
           </div>
         </div>

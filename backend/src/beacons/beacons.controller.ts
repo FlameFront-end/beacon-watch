@@ -13,7 +13,7 @@ import { ApiTags } from "@nestjs/swagger";
 
 import { SessionAuthGuard } from "../auth/session-auth.guard.js";
 import {
-  requireRegisteredService,
+  requireServiceCapability,
   type ServiceKey,
 } from "../services/service-catalog.js";
 import type { BeaconEntity, BeaconType } from "./beacon.entity.js";
@@ -63,5 +63,5 @@ export class BeaconsController {
 }
 
 function readServiceKey(serviceKey: string): ServiceKey {
-  return requireRegisteredService(serviceKey).key;
+  return requireServiceCapability(serviceKey, "beacons");
 }

@@ -18,12 +18,20 @@ Rejected alternatives:
 The backend and frontend each expose a small static registry with the same stable contract:
 
 ```ts
-{
-  key: "owa",
-  name: "Outlook Web App",
-  description: "OWA beacon and captured email monitoring",
-  capabilities: ["beacons", "emails"]
-}
+[
+  {
+    key: "owa",
+    name: "Outlook Web App",
+    description: "OWA beacon and captured email monitoring",
+    capabilities: ["beacons", "emails"]
+  },
+  {
+    key: "zimbra",
+    name: "Zimbra",
+    description: "Zimbra captured email monitoring",
+    capabilities: ["emails"]
+  }
+]
 ```
 
 Unknown service keys return `404` in the API and redirect to `/` in the frontend. New services are added deliberately in code. No service-management UI or database table is introduced.
@@ -38,10 +46,12 @@ Authenticated routes:
 /owa/beacons              OWA beacon dashboard
 /owa/beacons/:beaconId    OWA beacon details
 /owa/emails               OWA captured emails
+/zimbra                   redirect to /zimbra/emails
+/zimbra/emails            Zimbra captured emails
 /smtp                     global SMTP composer and settings
 ```
 
-The global header contains Home and SMTP navigation. Service pages add service context and local navigation for Beacons and Emails. The root service-selection page displays one OWA card now and supports more registry entries later.
+The global header contains Home and SMTP navigation. Service pages add service context and local navigation based on each service capability. OWA shows Beacons and Emails; Zimbra shows only Emails.
 
 The existing mail composer, HTML import, and SMTP settings move out of the OWA emails page into `/smtp`. `/owa/emails` contains only service-scoped received-email browsing and deletion.
 
@@ -123,6 +133,7 @@ Because legacy routes are intentionally removed, existing test payloads must be 
 ```text
 /api/services/owa/beacons
 /api/services/owa/emails
+/api/services/zimbra/emails
 ```
 
 ## Testing
