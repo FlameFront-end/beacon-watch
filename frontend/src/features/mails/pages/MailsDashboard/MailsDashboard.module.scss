@@ -225,8 +225,28 @@
 }
 
 .messageField,
+.importRow,
 .sendActions {
   grid-column: 1 / -1;
+}
+
+.importRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.htmlFileInput {
+  display: none;
+}
+
+.importedFileName {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .htmlToggle {

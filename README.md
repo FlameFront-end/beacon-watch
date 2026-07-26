@@ -139,11 +139,11 @@ Keep `VITE_API_URL` empty for local `npm run dev`; Vite proxies API requests thr
 `POST /mails` is public and stores new mail payloads while skipping duplicate mail IDs.
 `GET /api/mails` requires the admin session cookie and returns the newest stored mails with a bounded list size.
 `POST /api/mails/send` requires the admin session cookie and sends a message
-through the configured SMTP server. The optional `html` field is sanitized and
+through the configured SMTP server. The optional `html` field is sent unchanged
 used as the HTML representation.
 Safe inline email styles, table layout, and HTTPS/CID images are preserved.
 Scripts, event handlers, unsafe URLs, and unsafe CSS are removed. If `text` is
-omitted, the backend generates a plain-text alternative from the sanitized
+omitted, the backend generates a plain-text alternative from the submitted
 HTML.
 The dashboard, `GET/DELETE /beacons`, `GET /beacons/:id`, and `/sse` require
 the admin session cookie created by `POST /auth/login`.

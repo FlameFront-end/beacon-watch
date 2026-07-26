@@ -250,7 +250,7 @@ async function bootstrap(): Promise<void> {
       "/api/mails/send": {
         post: {
           tags: ["mails"],
-          summary: "Send a plain-text or safe HTML message through SMTP",
+          summary: "Send a plain-text or raw HTML message through SMTP",
           requestBody: {
             required: true,
             content: {
@@ -268,7 +268,7 @@ async function bootstrap(): Promise<void> {
                     },
                     html: {
                       type: "string",
-                      description: "Optional safe HTML representation of text",
+                      description: "Optional raw HTML representation of text",
                     },
                   },
                 },

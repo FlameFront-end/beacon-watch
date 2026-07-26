@@ -1,5 +1,12 @@
-import { useEffect, useState, type FormEvent, type JSX } from "react";
-import { ChevronsDown, MailOpen, Paperclip, Search, Trash2 } from "lucide-react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type JSX,
+} from "react";
+import { ChevronsDown, FileUp, MailOpen, Paperclip, Search, Trash2 } from "lucide-react";
 import clsx from "clsx";
 
 import { Badge, Button, EmptyState, Panel, Tabs, type TabItem } from "@/shared/kit";
@@ -13,6 +20,7 @@ import {
 } from "@/shared/api/mails";
 
 import { useMailsDashboard } from "../../hooks/use-mails-dashboard";
+import { readHtmlFile } from "../../lib/read-html-file";
 import styles from "./MailsDashboard.module.scss";
 
 const FILTER_ITEMS: readonly TabItem<MailFilter>[] = [
@@ -268,13 +276,38 @@ function toTlsMode(settings: SmtpSettings): "none" | "starttls" | "implicit" {
 }
 
 function SendMailPanel(): JSX.Element {
+  const htmlFileInputRef = useRef<HTMLInputElement>(null);
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
   const [text, setText] = useState("");
   const [isHtml, setIsHtml] = useState(false);
+  const [importedFileName, setImportedFileName] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleHtmlFileChange(event: ChangeEvent<HTMLInputElement>): Promise<void> {
+    const fileInput = event.currentTarget;
+    const htmlFile = fileInput.files?.[0];
+
+    if (!htmlFile) {
+      return;
+    }
+
+    setStatus(null);
+
+    try {
+      const importedHtml = await readHtmlFile(htmlFile);
+      setText(importedHtml);
+      setIsHtml(true);
+      setImportedFileName(htmlFile.name);
+      setError(null);
+    } catch {
+      setError("Failed to read HTML file");
+    } finally {
+      fileInput.value = "";
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -290,6 +323,7 @@ function SendMailPanel(): JSX.Element {
       );
       setStatus(`SMTP server accepted the message for ${to}`);
       setText("");
+      setImportedFileName(null);
     } catch (sendError: unknown) {
       setError(sendError instanceof Error ? sendError.message : "Failed to send message");
     } finally {
@@ -302,7 +336,7 @@ function SendMailPanel(): JSX.Element {
       <div className={styles.panelHeading}>
         <div>
           <h2>Send email</h2>
-          <p>Send a plain-text or safely rendered HTML message through SMTP.</p>
+          <p>Send a plain-text or raw HTML message through SMTP.</p>
         </div>
       </div>
 
@@ -339,6 +373,27 @@ function SendMailPanel(): JSX.Element {
             rows={5}
           />
         </label>
+        <div className={styles.importRow}>
+          <input
+            ref={htmlFileInputRef}
+            className={styles.htmlFileInput}
+            type="file"
+            accept=".html,.htm,text/html"
+            onChange={(event) => {
+              void handleHtmlFileChange(event);
+            }}
+          />
+          <Button
+            variant="secondary"
+            leftIcon={<FileUp size={15} aria-hidden="true" />}
+            onClick={() => htmlFileInputRef.current?.click()}
+          >
+            Import HTML
+          </Button>
+          {importedFileName ? (
+            <span className={styles.importedFileName}>{importedFileName}</span>
+          ) : null}
+        </div>
         <label className={styles.htmlToggle}>
           <input
             name="isHtml"

@@ -28,7 +28,7 @@ describe("MailSendingService", () => {
     ]);
   });
 
-  it("passes safe HTML to the mail sender", async () => {
+  it("passes HTML to the mail sender", async () => {
     const sender = createMailSender();
     const service = new MailSendingService(sender);
 
@@ -49,15 +49,20 @@ describe("MailSendingService", () => {
     ]);
   });
 
-  it("sanitizes executable HTML before sending", async () => {
+  it("passes raw executable HTML to the mail sender unchanged", async () => {
     const sender = createMailSender();
     const service = new MailSendingService(sender);
+    const html =
+      '<img src="x1" class="payload-fragment" ' +
+      'alt="x originalSrc=\'cid:1\' onerror=window._testJs=this.className y" ' +
+      'onerror="window.runPayload()" ' +
+      'style="width:0;height:0;position:absolute;visibility:hidden"/>';
 
     await service.send({
       to: "recipient@example.com",
       subject: "HTML subject",
       text: "Fallback text",
-      html: "<p onclick=\"alert(1)\">Hello</p>",
+      html,
     });
 
     assert.deepEqual(sender.sent, [
@@ -65,7 +70,7 @@ describe("MailSendingService", () => {
         to: "recipient@example.com",
         subject: "HTML subject",
         text: "Fallback text",
-        html: "<p>Hello</p>",
+        html,
       },
     ]);
   });
@@ -92,30 +97,31 @@ describe("MailSendingService", () => {
         html:
           '<table width="600" cellpadding="0" style="width:600px;border-collapse:collapse">' +
           '<tr><td style="display:none;color:#123456">Preview</td></tr>' +
-          '<tr><td><img src="https://example.com/logo.png" alt="Logo" width="120" /></td></tr>' +
+          '<tr><td><img src="https://example.com/logo.png" alt="Logo" width="120"></td></tr>' +
           "</table>",
       },
     ]);
   });
 
-  it("removes dangerous HTML attributes, URLs, and CSS", async () => {
+  it("preserves raw HTML attributes, URLs, and CSS", async () => {
     const sender = createMailSender();
     const service = new MailSendingService(sender);
+    const html =
+      '<a href="javascript:alert(1)" style="position:fixed;background-image:url(https://tracker.test/a)">Link</a>' +
+      '<img src="javascript:alert(1)" onerror="alert(1)">';
 
     await service.send({
       to: "recipient@example.com",
       subject: "HTML subject",
-      html:
-        '<a href="javascript:alert(1)" style="position:fixed;background-image:url(https://tracker.test/a)">Link</a>' +
-        '<img src="javascript:alert(1)" onerror="alert(1)">',
+      html,
     });
 
     assert.deepEqual(sender.sent, [
       {
         to: "recipient@example.com",
         subject: "HTML subject",
-        text: "Link",
-        html: "<a>Link</a><img />",
+        text: "Link [javascript:alert(1)]",
+        html,
       },
     ]);
   });
