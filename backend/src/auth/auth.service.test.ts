@@ -52,6 +52,23 @@ describe("AuthService", () => {
 
     assert.equal(service.validateSessionToken(token), null);
   });
+
+  it("uses secure cookies by default and allows an explicit local opt-out", () => {
+    const secureService = createAuthService({
+      ADMIN_USERNAME: "admin",
+      ADMIN_PASSWORD: "admin",
+      AUTH_SESSION_SECRET: "test-secret",
+    });
+    const localHttpService = createAuthService({
+      ADMIN_USERNAME: "admin",
+      ADMIN_PASSWORD: "admin",
+      AUTH_SESSION_SECRET: "test-secret",
+      AUTH_COOKIE_SECURE: "false",
+    });
+
+    assert.equal(secureService.isCookieSecure(), true);
+    assert.equal(localHttpService.isCookieSecure(), false);
+  });
 });
 
 function createAuthService(

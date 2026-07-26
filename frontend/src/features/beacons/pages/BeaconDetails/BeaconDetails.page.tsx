@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useRoute } from "wouter";
 
 import { getBeacon } from "@/shared/api/beacons";
 import type { Beacon } from "@/shared/model/beacon";
@@ -11,7 +11,8 @@ import { BeaconCard } from "../../components/BeaconCard";
 import styles from "./BeaconDetails.module.scss";
 
 export function BeaconDetailsPage(): JSX.Element {
-  const { beaconId = "" } = useParams();
+  const [, params] = useRoute("/beacons/:beaconId");
+  const beaconId = params?.beaconId ?? "";
   const [beacon, setBeacon] = useState<Beacon | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export function BeaconDetailsPage(): JSX.Element {
   if (error || !beacon) {
     return (
       <EmptyState title="Beacon not found" description={error ?? "The requested beacon could not be loaded."}>
-        <Link className={styles.backLink} to="/">
+        <Link className={styles.backLink} href="/">
           Back to dashboard
         </Link>
       </EmptyState>

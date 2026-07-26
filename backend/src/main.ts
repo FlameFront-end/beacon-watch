@@ -1,16 +1,50 @@
 import "reflect-metadata";
 
-import express from "express";
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import { NestFactory } from "@nestjs/core";
 import { SwaggerModule, type OpenAPIObject } from "@nestjs/swagger";
 
 import { AppModule } from "./app.module.js";
+import {
+  isPublicIngestCorsRequest,
+  parseCorsOrigins,
+} from "./config/cors.js";
 
 const TEXT_BODY_LIMIT = process.env.TEXT_BODY_LIMIT ?? "10mb";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
-  app.enableCors({ origin: true, credentials: true });
+  app.use((request: Request, response: Response, next: NextFunction) => {
+    if (
+      !isPublicIngestCorsRequest(
+        request.method,
+        request.path,
+        request.get("Access-Control-Request-Method"),
+      )
+    ) {
+      next();
+      return;
+    }
+
+    response.setHeader("Access-Control-Allow-Origin", "*");
+    response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    if (request.method === "OPTIONS") {
+      response.sendStatus(204);
+      return;
+    }
+
+    next();
+  });
+  const corsOrigins = parseCorsOrigins(process.env.CORS_ORIGINS);
+  if (corsOrigins.length > 0) {
+    app.enableCors({ origin: corsOrigins, credentials: true });
+  }
   app.use(express.text({ type: ["text/plain", "text/*"], limit: TEXT_BODY_LIMIT }));
 
   const document: OpenAPIObject = {
@@ -210,6 +244,60 @@ async function bootstrap(): Promise<void> {
             "401": {
               description: "Authentication required",
             },
+          },
+        },
+      },
+      "/api/mails/send": {
+        post: {
+          tags: ["mails"],
+          summary: "Send a plain-text or safe HTML message through SMTP",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["to", "subject"],
+                  properties: {
+                    to: { type: "string", format: "email" },
+                    subject: { type: "string" },
+                    text: {
+                      type: "string",
+                      description:
+                        "Plain-text body. Generated from html when omitted.",
+                    },
+                    html: {
+                      type: "string",
+                      description: "Optional safe HTML representation of text",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "204": { description: "Message accepted by SMTP" },
+            "400": { description: "Invalid message" },
+            "401": { description: "Authentication required" },
+          },
+        },
+      },
+      "/api/settings/smtp": {
+        get: {
+          tags: ["settings"],
+          summary: "Get SMTP settings without the password",
+          responses: {
+            "200": { description: "Current SMTP settings" },
+            "401": { description: "Authentication required" },
+          },
+        },
+        put: {
+          tags: ["settings"],
+          summary: "Update SMTP settings",
+          responses: {
+            "200": { description: "Updated SMTP settings" },
+            "400": { description: "Invalid SMTP settings" },
+            "401": { description: "Authentication required" },
           },
         },
       },

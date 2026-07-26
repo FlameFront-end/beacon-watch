@@ -1,5 +1,5 @@
 import type { JSX } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 
 import type { Beacon } from "@/shared/model/beacon";
 import { EmptyState } from "@/shared/kit";
@@ -30,7 +30,7 @@ export function BeaconList({ beacons, isLoading }: BeaconListProps): JSX.Element
   return (
     <div className={styles.list}>
       {beacons.map((beacon) => (
-        <Link key={beacon.id} to={`/beacons/${encodeURIComponent(beacon.id)}`} className={styles.linkCard}>
+        <Link key={beacon.id} href={`/beacons/${encodeURIComponent(beacon.id)}`} className={styles.linkCard}>
           <BeaconCard beacon={beacon} />
         </Link>
       ))}

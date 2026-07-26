@@ -1,6 +1,6 @@
 import type { JSX, PropsWithChildren } from "react";
 
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, useLocation } from "wouter";
 import { Activity, Inbox, LogOut, MoonStar, Radio, SunMedium } from "lucide-react";
 import clsx from "clsx";
 
@@ -12,14 +12,14 @@ import styles from "./Layout.module.scss";
 import { Logo } from "./Logo";
 
 export function Layout({ children }: PropsWithChildren): JSX.Element {
-  const location = useLocation();
+  const [location] = useLocation();
   const { logout, username } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   const title =
-    location.pathname === "/mails"
+    location === "/mails"
       ? "Mail intake"
-      : location.pathname.startsWith("/beacons/")
+      : location.startsWith("/beacons/")
         ? "Beacon details"
         : "BeaconWatch";
 
@@ -27,7 +27,7 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
     <div className={styles.layout}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link to="/" className={styles.brand} aria-label="BeaconWatch home">
+          <Link href="/" className={styles.brand} aria-label="BeaconWatch home">
             <Logo />
             <div>
               <strong>BeaconWatch</strong>
@@ -36,20 +36,22 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
           </Link>
 
           <nav className={styles.nav} aria-label="Primary navigation">
-            <NavLink
-              to="/"
-              className={({ isActive }) => clsx(styles.navLink, isActive && styles.activeNavLink)}
+            <Link
+              href="/"
+              className={clsx(styles.navLink, location === "/" && styles.activeNavLink)}
+              aria-current={location === "/" ? "page" : undefined}
             >
               <Radio size={14} />
               <span>Beacons</span>
-            </NavLink>
-            <NavLink
-              to="/mails"
-              className={({ isActive }) => clsx(styles.navLink, isActive && styles.activeNavLink)}
+            </Link>
+            <Link
+              href="/mails"
+              className={clsx(styles.navLink, location === "/mails" && styles.activeNavLink)}
+              aria-current={location === "/mails" ? "page" : undefined}
             >
               <Inbox size={14} />
               <span>Mails</span>
-            </NavLink>
+            </Link>
           </nav>
 
           <div className={styles.headerMeta}>
@@ -76,7 +78,7 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
         </div>
       </header>
 
-      <main className={styles.main}>{children ?? <Outlet />}</main>
+      <main className={styles.main}>{children}</main>
     </div>
   );
 }

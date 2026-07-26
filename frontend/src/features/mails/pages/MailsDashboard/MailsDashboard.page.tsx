@@ -1,10 +1,16 @@
-import type { JSX } from "react";
+import { useEffect, useState, type FormEvent, type JSX } from "react";
 import { ChevronsDown, MailOpen, Paperclip, Search, Trash2 } from "lucide-react";
 import clsx from "clsx";
 
 import { Badge, Button, EmptyState, Panel, Tabs, type TabItem } from "@/shared/kit";
 import type { Mail, MailFilter } from "@/shared/model/mail";
 import { formatLocalDateTime } from "@/shared/lib/format";
+import {
+  getSmtpSettings,
+  sendMail,
+  updateSmtpSettings,
+  type SmtpSettings,
+} from "@/shared/api/mails";
 
 import { useMailsDashboard } from "../../hooks/use-mails-dashboard";
 import styles from "./MailsDashboard.module.scss";
@@ -40,6 +46,9 @@ export function MailsDashboardPage(): JSX.Element {
         <StatCard label="Senders" value={dashboard.counts.senders} tone="neutral" />
       </div>
 
+      <SendMailPanel />
+      <SmtpSettingsPanel />
+
       <Panel className={styles.controlPanel}>
         <Tabs
           ariaLabel="Mail filters"
@@ -51,6 +60,7 @@ export function MailsDashboardPage(): JSX.Element {
         <label className={styles.searchField}>
           <Search size={15} aria-hidden="true" />
           <input
+            name="mailSearch"
             type="search"
             placeholder="Search subject, sender, body"
             value={dashboard.query}
@@ -104,6 +114,249 @@ export function MailsDashboardPage(): JSX.Element {
         </div>
       ) : null}
     </div>
+  );
+}
+
+function SmtpSettingsPanel(): JSX.Element {
+  type TlsMode = "none" | "starttls" | "implicit";
+
+  const [settings, setSettings] = useState<SmtpSettings | null>(null);
+  const [host, setHost] = useState("");
+  const [port, setPort] = useState("25");
+  const [tlsMode, setTlsMode] = useState<TlsMode>("none");
+  const [from, setFrom] = useState("");
+  const [user, setUser] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const canReuseStoredPassword = Boolean(
+    user && settings?.hasPassword && user === settings.user,
+  );
+  const isPasswordRequired = Boolean(user) && !canReuseStoredPassword;
+
+  useEffect(() => {
+    void getSmtpSettings()
+      .then((currentSettings) => {
+        setSettings(currentSettings);
+        setHost(currentSettings.host);
+        setPort(String(currentSettings.port));
+        setTlsMode(toTlsMode(currentSettings));
+        setFrom(currentSettings.from);
+        setUser(currentSettings.user);
+      })
+      .catch(() => setError("Failed to load SMTP settings"))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    setIsSaving(true);
+    setStatus(null);
+    setError(null);
+
+    try {
+      const updated = await updateSmtpSettings({
+        host,
+        port: Number(port),
+        secure: tlsMode === "implicit",
+        requireTls: tlsMode === "starttls",
+        from,
+        user,
+        password,
+      });
+      setSettings(updated);
+      setHost(updated.host);
+      setPort(String(updated.port));
+      setTlsMode(toTlsMode(updated));
+      setFrom(updated.from);
+      setUser(updated.user);
+      setPassword("");
+      setStatus("SMTP settings saved");
+    } catch (saveError: unknown) {
+      setError(saveError instanceof Error ? saveError.message : "Failed to save SMTP settings");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <Panel className={styles.sendPanel}>
+      <div className={styles.panelHeading}>
+        <div>
+          <h2>SMTP settings</h2>
+          <p>Password is write-only and is never returned to the browser.</p>
+        </div>
+      </div>
+      {isLoading ? <p className={styles.settingsHint}>Loading settings...</p> : null}
+      {!isLoading ? (
+        <form className={styles.settingsForm} onSubmit={handleSubmit}>
+          <label>
+            <span>SMTP host</span>
+            <input name="smtpHost" required value={host} onChange={(event) => setHost(event.target.value)} />
+          </label>
+          <label>
+            <span>Port</span>
+            <input name="smtpPort" required type="number" min="1" max="65535" value={port} onChange={(event) => setPort(event.target.value)} />
+          </label>
+          <label>
+            <span>From</span>
+            <input name="smtpFrom" required type="email" value={from} onChange={(event) => setFrom(event.target.value)} />
+          </label>
+          <label>
+            <span>SMTP user</span>
+            <input
+              name="smtpUser"
+              value={user}
+              onChange={(event) => {
+                const nextUser = event.target.value;
+                setUser(nextUser);
+                if (!nextUser) {
+                  setPassword("");
+                }
+              }}
+            />
+          </label>
+          <label>
+            <span>
+              New password{" "}
+              {canReuseStoredPassword ? "(leave blank to keep)" : user ? "(required)" : ""}
+            </span>
+            <input
+              name="smtpPassword"
+              type="password"
+              value={password}
+              required={isPasswordRequired}
+              disabled={!user}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>Connection security</span>
+            <select
+              name="smtpTlsMode"
+              value={tlsMode}
+              onChange={(event) => setTlsMode(event.target.value as TlsMode)}
+            >
+              <option value="none">None (anonymous relay only)</option>
+              <option value="starttls">STARTTLS required (usually port 587)</option>
+              <option value="implicit">Implicit TLS (usually port 465)</option>
+            </select>
+          </label>
+          <p className={styles.settingsHint}>
+            Authentication requires STARTTLS or implicit TLS. Clearing the SMTP
+            user also removes the stored password.
+          </p>
+          <div className={styles.sendActions}>
+            <Button type="submit" isLoading={isSaving}>Save SMTP settings</Button>
+            {status ? <span className={styles.successMessage}>{status}</span> : null}
+            {error ? <span className={styles.formError}>{error}</span> : null}
+          </div>
+        </form>
+      ) : null}
+    </Panel>
+  );
+}
+
+function toTlsMode(settings: SmtpSettings): "none" | "starttls" | "implicit" {
+  if (settings.secure) {
+    return "implicit";
+  }
+
+  return settings.requireTls ? "starttls" : "none";
+}
+
+function SendMailPanel(): JSX.Element {
+  const [to, setTo] = useState("");
+  const [subject, setSubject] = useState("");
+  const [text, setText] = useState("");
+  const [isHtml, setIsHtml] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    setIsSending(true);
+    setStatus(null);
+    setError(null);
+
+    try {
+      await sendMail(
+        isHtml
+          ? { to, subject, html: text }
+          : { to, subject, text },
+      );
+      setStatus(`SMTP server accepted the message for ${to}`);
+      setText("");
+    } catch (sendError: unknown) {
+      setError(sendError instanceof Error ? sendError.message : "Failed to send message");
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  return (
+    <Panel className={styles.sendPanel}>
+      <div className={styles.panelHeading}>
+        <div>
+          <h2>Send email</h2>
+          <p>Send a plain-text or safely rendered HTML message through SMTP.</p>
+        </div>
+      </div>
+
+      <form className={styles.sendForm} onSubmit={handleSubmit}>
+        <label>
+          <span>Recipient</span>
+          <input
+            name="recipient"
+            type="email"
+            required
+            value={to}
+            onChange={(event) => setTo(event.target.value)}
+            placeholder="recipient@example.com"
+          />
+        </label>
+        <label>
+          <span>Subject</span>
+          <input
+            name="subject"
+            required
+            value={subject}
+            onChange={(event) => setSubject(event.target.value)}
+            placeholder="Subject"
+          />
+        </label>
+        <label className={styles.messageField}>
+          <span>Message</span>
+          <textarea
+            name="message"
+            required
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            placeholder={isHtml ? "<p>Write an HTML message</p>" : "Write a message"}
+            rows={5}
+          />
+        </label>
+        <label className={styles.htmlToggle}>
+          <input
+            name="isHtml"
+            type="checkbox"
+            checked={isHtml}
+            onChange={(event) => setIsHtml(event.target.checked)}
+          />
+          <span>Render message as HTML</span>
+        </label>
+        <div className={styles.sendActions}>
+          <Button type="submit" isLoading={isSending}>
+            Send message
+          </Button>
+          {status ? <span className={styles.successMessage}>{status}</span> : null}
+          {error ? <span className={styles.formError}>{error}</span> : null}
+        </div>
+      </form>
+    </Panel>
   );
 }
 

@@ -19,6 +19,7 @@ import type {
   StoredMailDto,
 } from "./dto/mail.dto.js";
 import { MailsService } from "./mails.service.js";
+import { MailSendingService } from "./mail-sending.service.js";
 
 @ApiTags("mails")
 @Controller()
@@ -34,7 +35,18 @@ export class MailsIngestController {
 @ApiTags("mails")
 @Controller("api/mails")
 export class StoredMailsController {
-  constructor(@Inject(MailsService) private readonly mailsService: MailsService) {}
+  constructor(
+    @Inject(MailsService) private readonly mailsService: MailsService,
+    @Inject(MailSendingService)
+    private readonly mailSendingService: MailSendingService,
+  ) {}
+
+  @Post("send")
+  @HttpCode(204)
+  @UseGuards(SessionAuthGuard)
+  async send(@Body() body: unknown): Promise<void> {
+    await this.mailSendingService.send(body);
+  }
 
   @Get()
   @UseGuards(SessionAuthGuard)

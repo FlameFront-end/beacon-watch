@@ -8,10 +8,24 @@ import {
   StoredMailsController,
 } from "./mails.controller.js";
 import { MailsService } from "./mails.service.js";
+import {
+  MAIL_SENDER,
+  MailSendingService,
+} from "./mail-sending.service.js";
+import { SmtpMailerService } from "./smtp-mailer.service.js";
+import { SmtpSettingsController } from "./smtp-settings.controller.js";
+import { SmtpSettingsService } from "./smtp-settings.service.js";
+import { SmtpSettingsEntity } from "./smtp-settings.entity.js";
 
 @Module({
-  imports: [AuthModule, TypeOrmModule.forFeature([MailEntity])],
-  controllers: [MailsIngestController, StoredMailsController],
-  providers: [MailsService],
+  imports: [AuthModule, TypeOrmModule.forFeature([MailEntity, SmtpSettingsEntity])],
+  controllers: [MailsIngestController, StoredMailsController, SmtpSettingsController],
+  providers: [
+    MailsService,
+    MailSendingService,
+    SmtpMailerService,
+    SmtpSettingsService,
+    { provide: MAIL_SENDER, useExisting: SmtpMailerService },
+  ],
 })
 export class MailsModule {}

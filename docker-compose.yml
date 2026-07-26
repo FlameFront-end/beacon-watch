@@ -2,11 +2,9 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: beaconwatch
-      POSTGRES_PASSWORD: beaconwatch
-      POSTGRES_DB: beaconwatch
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASS:?DB_PASS is required}
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
     volumes:
       - beaconwatch-postgres:/var/lib/postgresql/data
 
@@ -16,17 +14,27 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: beaconwatch
-      DB_PASS: beaconwatch
-      DB_NAME: beaconwatch
+      DB_USER: ${DB_USER:?DB_USER is required}
+      DB_PASS: ${DB_PASS:?DB_PASS is required}
+      DB_NAME: ${DB_NAME:?DB_NAME is required}
       PORT: 3000
-      ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: admin
-      AUTH_SESSION_SECRET: replace-with-a-long-random-secret
-      AUTH_SESSION_TTL_SECONDS: 86400
-      AUTH_COOKIE_SECURE: "false"
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?ADMIN_USERNAME is required}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      AUTH_SESSION_SECRET: ${AUTH_SESSION_SECRET:?AUTH_SESSION_SECRET is required}
+      AUTH_SESSION_TTL_SECONDS: ${AUTH_SESSION_TTL_SECONDS:-86400}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-25}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_REQUIRE_TLS: ${SMTP_REQUIRE_TLS:-false}
+      SMTP_FROM: ${SMTP_FROM:-beaconwatch@beaconwatch.local}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_TIMEOUT_MS: ${SMTP_TIMEOUT_MS:-10000}
+      SMTP_SETTINGS_ENCRYPTION_KEY: ${SMTP_SETTINGS_ENCRYPTION_KEY:?SMTP_SETTINGS_ENCRYPTION_KEY is required}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       - postgres
 

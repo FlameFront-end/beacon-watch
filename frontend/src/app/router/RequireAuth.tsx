@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation } from "wouter";
 
 import { EmptyState } from "@/shared/kit";
 import { useAuth } from "@/shared/hooks/use-auth";
@@ -9,8 +10,14 @@ type RequireAuthProps = {
 };
 
 export function RequireAuth({ children }: RequireAuthProps): ReactElement {
-  const location = useLocation();
+  const [location, navigate] = useLocation();
   const { status } = useAuth();
+
+  useEffect(() => {
+    if (status === "anonymous") {
+      navigate("/login", { replace: true, state: { from: location } });
+    }
+  }, [location, navigate, status]);
 
   if (status === "checking") {
     return (
@@ -23,7 +30,13 @@ export function RequireAuth({ children }: RequireAuthProps): ReactElement {
   }
 
   if (status === "anonymous") {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return (
+      <EmptyState
+        loading
+        title="Redirecting"
+        description="Authentication is required."
+      />
+    );
   }
 
   return children;

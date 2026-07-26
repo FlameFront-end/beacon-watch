@@ -1,41 +1,41 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
-
-import { Layout } from "@/shared/widgets/Layout/Layout";
+import type { ReactElement } from "react";
+import { useEffect } from "react";
+import { Route, Switch, useLocation } from "wouter";
 
 import { LoginPage } from "@/features/auth/pages/Login/Login.page";
 import { BeaconDetailsPage } from "@/features/beacons/pages/BeaconDetails/BeaconDetails.page";
 import { BeaconsDashboardPage } from "@/features/beacons/pages/BeaconsDashboard/BeaconsDashboard.page";
 import { MailsDashboardPage } from "@/features/mails/pages/MailsDashboard/MailsDashboard.page";
+import { Layout } from "@/shared/widgets/Layout/Layout";
+
 import { RequireAuth } from "./RequireAuth";
 
-export const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    element: (
-      <RequireAuth>
-        <Layout />
-      </RequireAuth>
-    ),
-    children: [
-      {
-        path: "/",
-        element: <BeaconsDashboardPage />,
-      },
-      {
-        path: "/beacons/:beaconId",
-        element: <BeaconDetailsPage />,
-      },
-      {
-        path: "/mails",
-        element: <MailsDashboardPage />,
-      },
-      {
-        path: "*",
-        element: <Navigate to="/" replace />,
-      },
-    ],
-  },
-]);
+export function AppRouter(): ReactElement {
+  return (
+    <Switch>
+      <Route path="/login" component={LoginPage} />
+      <Route>
+        <RequireAuth>
+          <Layout>
+            <Switch>
+              <Route path="/" component={BeaconsDashboardPage} />
+              <Route path="/beacons/:beaconId" component={BeaconDetailsPage} />
+              <Route path="/mails" component={MailsDashboardPage} />
+              <Route component={RedirectToHome} />
+            </Switch>
+          </Layout>
+        </RequireAuth>
+      </Route>
+    </Switch>
+  );
+}
+
+function RedirectToHome(): ReactElement | null {
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    navigate("/", { replace: true });
+  }, [navigate]);
+
+  return null;
+}

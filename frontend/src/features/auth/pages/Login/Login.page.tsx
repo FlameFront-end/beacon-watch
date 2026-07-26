@@ -1,6 +1,6 @@
 import type { FormEvent, JSX } from "react";
-import { useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { LockKeyhole, LogIn } from "lucide-react";
 
 import { Button } from "@/shared/kit";
@@ -9,26 +9,25 @@ import { useAuth } from "@/shared/hooks/use-auth";
 import styles from "./Login.module.scss";
 
 type LoginLocationState = {
-  readonly from?: {
-    readonly pathname?: string;
-  };
+  readonly from?: string;
 };
 
 export function LoginPage(): JSX.Element {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [, navigate] = useLocation();
   const { login, status } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const locationState = location.state as LoginLocationState | null;
-  const redirectPath = locationState?.from?.pathname ?? "/";
+  const locationState = window.history.state as LoginLocationState | null;
+  const redirectPath = locationState?.from ?? "/";
 
-  if (status === "authenticated") {
-    return <Navigate to={redirectPath} replace />;
-  }
+  useEffect(() => {
+    if (status === "authenticated") {
+      navigate(redirectPath, { replace: true });
+    }
+  }, [navigate, redirectPath, status]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

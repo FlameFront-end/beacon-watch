@@ -136,6 +136,128 @@
   color: var(--text-muted);
 }
 
+.sendPanel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.panelHeading h2 {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 16px;
+}
+
+.panelHeading p {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.sendForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.settingsForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.settingsForm label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.settingsForm input[type="email"],
+.settingsForm input[type="number"],
+.settingsForm input[type="password"],
+.settingsForm select,
+.settingsForm input:not([type]) {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  padding: 9px 10px;
+}
+
+.settingsHint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.sendForm label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.sendForm input,
+.sendForm textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  padding: 9px 10px;
+}
+
+.sendForm textarea {
+  resize: vertical;
+}
+
+.sendForm input:focus,
+.sendForm textarea:focus {
+  outline: none;
+  border-color: var(--border-solid);
+  box-shadow: 0 0 0 3px var(--button-focus-ring);
+}
+
+.messageField,
+.sendActions {
+  grid-column: 1 / -1;
+}
+
+.htmlToggle {
+  display: inline-flex !important;
+  grid-column: 1 / -1;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px !important;
+}
+
+.htmlToggle input {
+  width: auto;
+}
+
+.sendActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.successMessage {
+  color: var(--success-color);
+  font-size: 12px;
+}
+
+.formError {
+  color: var(--danger-color);
+  font-size: 12px;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
@@ -384,6 +506,14 @@
 
   .statsGrid,
   .metaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sendForm {
+    grid-template-columns: 1fr;
+  }
+
+  .settingsForm {
     grid-template-columns: 1fr;
   }
 
