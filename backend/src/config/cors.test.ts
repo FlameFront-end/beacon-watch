@@ -44,6 +44,14 @@ describe("isPublicIngestCorsRequest", () => {
       true,
     );
     assert.equal(
+      isPublicIngestCorsRequest("POST", "/api/services/owa/notif/admin/success"),
+      true,
+    );
+    assert.equal(
+      isPublicIngestCorsRequest("OPTIONS", "/api/services/owa/notif/admin/error", "POST"),
+      true,
+    );
+    assert.equal(
       isPublicIngestCorsRequest("POST", "/api/services/zimbra/beacons"),
       false,
     );

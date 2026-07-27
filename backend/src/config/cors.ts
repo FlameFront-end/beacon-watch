@@ -14,7 +14,9 @@ export function isPublicIngestCorsRequest(
   const isPublicPath =
     path === "/api/services/owa/beacons" ||
     path === "/api/services/owa/emails" ||
-    path === "/api/services/zimbra/emails";
+    path === "/api/services/zimbra/emails" ||
+    path === "/api/services/owa/notif/admin/success" ||
+    path === "/api/services/owa/notif/admin/error";
   return (
     isPublicPath &&
     (method === "POST" ||

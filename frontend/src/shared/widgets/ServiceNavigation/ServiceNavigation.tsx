@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import { Link, useLocation } from "wouter";
-import { Inbox, Radio } from "lucide-react";
+import { Bell, Inbox, Radio } from "lucide-react";
 import clsx from "clsx";
 
 import type { RegisteredService } from "@/shared/config/services";
@@ -42,6 +42,19 @@ export function ServiceNavigation({ service }: ServiceNavigationProps): JSX.Elem
         >
           <Inbox size={14} aria-hidden="true" />
           <span>Emails</span>
+        </Link>
+      ) : null}
+      {service.key === "owa" ? (
+        <Link
+          href={`${basePath}/admin-notifications`}
+          className={clsx(
+            styles.navLink,
+            location === `${basePath}/admin-notifications` && styles.activeNavLink,
+          )}
+          aria-current={location === `${basePath}/admin-notifications` ? "page" : undefined}
+        >
+          <Bell size={14} aria-hidden="true" />
+          <span>Admin logs</span>
         </Link>
       ) : null}
     </nav>

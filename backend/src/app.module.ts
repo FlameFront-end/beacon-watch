@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { AuthModule } from "./auth/auth.module.js";
+import { AdminNotificationsModule } from "./admin-notifications/admin-notifications.module.js";
 import { BeaconsModule } from "./beacons/beacons.module.js";
 import { BeaconEntity } from "./beacons/beacon.entity.js";
 import { InitialSchemaAndSmtpTls1785078000000 } from "./database/migrations/1785078000000-initial-schema-and-smtp-tls.js";
@@ -38,6 +39,7 @@ import { SseModule } from "./sse/sse.module.js";
       }),
     }),
     AuthModule,
+    AdminNotificationsModule,
     BeaconsModule,
     MailsModule,
     SseModule,

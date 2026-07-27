@@ -46,6 +46,7 @@ async function bootstrap(): Promise<void> {
     app.enableCors({ origin: corsOrigins, credentials: true });
   }
   app.use(express.text({ type: ["text/plain", "text/*"], limit: TEXT_BODY_LIMIT }));
+  app.use(express.json({ limit: TEXT_BODY_LIMIT }));
 
   const document: OpenAPIObject = {
     openapi: "3.0.0",
