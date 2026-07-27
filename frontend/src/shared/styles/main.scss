@@ -31,3 +31,14 @@ body {
 *::-webkit-scrollbar-track {
   background: transparent;
 }
+
+html,
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+}

@@ -7,6 +7,7 @@ FROM node:22-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts index.html ./
+COPY public ./public
 COPY src ./src
 RUN npm run build
 

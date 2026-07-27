@@ -14,12 +14,18 @@ import {
   updateSmtpSettings,
   type SmtpSettings,
 } from "@/shared/api/smtp";
-import { Button, Panel } from "@/shared/kit";
+import { Button, Panel, Select } from "@/shared/kit";
 import { readHtmlFile } from "@/features/mails/lib/read-html-file";
 
 import styles from "./Smtp.module.scss";
 
 type TlsMode = "none" | "starttls" | "implicit";
+
+const TLS_MODE_OPTIONS = [
+  { value: "none", label: "None (anonymous relay only)" },
+  { value: "starttls", label: "STARTTLS required (usually port 587)" },
+  { value: "implicit", label: "Implicit TLS (usually port 465)" },
+] as const;
 
 export function SmtpPage(): JSX.Element {
   return (
@@ -328,18 +334,16 @@ function SmtpSettingsPanel(): JSX.Element {
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
-          <label>
+          <div className={styles.selectField}>
             <span>Connection security</span>
-            <select
+            <Select
               name="smtpTlsMode"
               value={tlsMode}
-              onChange={(event) => setTlsMode(event.target.value as TlsMode)}
-            >
-              <option value="none">None (anonymous relay only)</option>
-              <option value="starttls">STARTTLS required (usually port 587)</option>
-              <option value="implicit">Implicit TLS (usually port 465)</option>
-            </select>
-          </label>
+              options={TLS_MODE_OPTIONS}
+              ariaLabel="Connection security"
+              onChange={setTlsMode}
+            />
+          </div>
           <label>
             <span>SOCKS5 proxy host</span>
             <input

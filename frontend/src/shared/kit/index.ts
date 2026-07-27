@@ -4,5 +4,6 @@ export { EmptyState } from "./UI/EmptyState/EmptyState";
 export { Modal } from "./UI/Modal/Modal";
 export { Panel } from "./UI/Panel/Panel";
 export { Skeleton } from "./UI/Skeleton/Skeleton";
+export { Select, type SelectOption } from "./UI/Select/Select";
 export { Spinner } from "./UI/Spinner/Spinner";
 export { Tabs, type TabItem } from "./UI/Tabs/Tabs";
