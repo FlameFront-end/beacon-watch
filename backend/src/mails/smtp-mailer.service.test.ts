@@ -117,6 +117,24 @@ describe("SmtpMailerService", () => {
 
     assert.equal(options.proxy, "socks5://proxy%20user:proxy%2Fpass@127.0.0.1:1080");
   });
+
+  it("brackets an IPv6 SOCKS5 proxy host", async () => {
+    const options = await captureTransportOptions({
+      host: "smtp.example.com",
+      port: 587,
+      secure: false,
+      requireTls: true,
+      from: "sender@example.com",
+      user: "sender@example.com",
+      password: "secret",
+      proxyHost: "2001:db8::1",
+      proxyPort: 1080,
+      proxyUser: "",
+      proxyPassword: "",
+    });
+
+    assert.equal(options.proxy, "socks5://[2001:db8::1]:1080");
+  });
 });
 
 async function captureTransportOptions(

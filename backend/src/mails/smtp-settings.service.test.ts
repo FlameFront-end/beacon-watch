@@ -108,6 +108,27 @@ describe("SmtpSettingsService", () => {
     );
   });
 
+  it("rejects an invalid SOCKS5 proxy host", async () => {
+    const service = new SmtpSettingsService(createRepository(), createConfig());
+
+    await assert.rejects(
+      () => service.update({
+        host: "smtp.example.com",
+        port: 587,
+        secure: false,
+        requireTls: true,
+        from: "sender@example.com",
+        user: "sender@example.com",
+        password: "new-secret",
+        proxyHost: "proxy.example.com/path",
+        proxyPort: 1080,
+        proxyUser: "",
+        proxyPassword: "",
+      }),
+      { message: "SOCKS5 proxy host is invalid" },
+    );
+  });
+
   it("accepts sender domains containing the letter s", async () => {
     const service = new SmtpSettingsService(createRepository(), createConfig());
 
@@ -257,6 +278,21 @@ describe("SmtpSettingsService", () => {
 
     await assert.rejects(() => service.get(), {
       message: "SMTP_USER and SMTP_PASSWORD must be configured together",
+    });
+  });
+
+  it("rejects incomplete SOCKS5 credentials from the environment", async () => {
+    const values = createConfigValues();
+    values.SMTP_SOCKS5_HOST = "proxy.example.com";
+    values.SMTP_SOCKS5_USER = "proxy-user";
+    values.SMTP_SOCKS5_PASSWORD = "";
+    const service = new SmtpSettingsService(
+      createRepository(),
+      createConfig(values),
+    );
+
+    await assert.rejects(() => service.get(), {
+      message: "SOCKS5 proxy user and password must be configured together",
     });
   });
 });

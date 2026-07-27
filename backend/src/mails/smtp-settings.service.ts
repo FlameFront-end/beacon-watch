@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { isIP } from "node:net";
 
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -230,6 +231,14 @@ function validateSettings(
     throw createError("SMTP authentication requires implicit TLS or STARTTLS");
   }
 
+  if (settings.proxyHost && !isValidProxyHost(settings.proxyHost)) {
+    throw createError("SOCKS5 proxy host is invalid");
+  }
+
+  if (Boolean(settings.proxyUser) !== Boolean(settings.proxyPassword)) {
+    throw createError("SOCKS5 proxy user and password must be configured together");
+  }
+
   if (!settings.proxyHost && (settings.proxyUser || settings.proxyPassword)) {
     throw createError("SOCKS5 proxy host is required for proxy authentication");
   }
@@ -365,6 +374,18 @@ function parseProxyPort(value: unknown): number {
   }
 
   return port;
+}
+
+function isValidProxyHost(value: string): boolean {
+  if (isIP(value) !== 0) {
+    return true;
+  }
+
+  if (/\s|[\\/@?#]/.test(value)) {
+    return false;
+  }
+
+  return /^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$/.test(value);
 }
 
 function isEmailAddress(value: string): boolean {

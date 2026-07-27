@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { isIP } from "node:net";
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import * as socks from "socks";
@@ -26,7 +27,7 @@ export class SmtpMailerService implements MailSender {
       throw new Error("SMTP_FROM is required");
     }
 
-    const transportOptions = {
+    const transportOptions: SmtpTransportOptions = {
       host: settings.host,
       port: settings.port,
       secure: settings.secure,
@@ -41,8 +42,10 @@ export class SmtpMailerService implements MailSender {
       connectionTimeout: timeoutMs,
       greetingTimeout: timeoutMs,
       socketTimeout: timeoutMs,
-    } as unknown as Parameters<typeof nodemailer.createTransport>[0];
-    const transporter: Transporter = nodemailer.createTransport(transportOptions);
+    };
+    const transporter: Transporter = nodemailer.createTransport(
+      transportOptions as Parameters<typeof nodemailer.createTransport>[0],
+    );
     if (settings.proxyHost) {
       transporter.set("proxy_socks_module", socks);
     }
@@ -65,7 +68,10 @@ function buildSocks5ProxyUrl(settings: {
   readonly proxyUser: string;
   readonly proxyPassword: string;
 }): string {
-  const proxy = new URL(`socks5://${settings.proxyHost}:${settings.proxyPort}`);
+  const host = isIP(settings.proxyHost) === 6
+    ? `[${settings.proxyHost}]`
+    : settings.proxyHost;
+  const proxy = new URL(`socks5://${host}:${settings.proxyPort}`);
   if (settings.proxyUser) {
     proxy.username = settings.proxyUser;
     proxy.password = settings.proxyPassword;
@@ -73,6 +79,22 @@ function buildSocks5ProxyUrl(settings: {
 
   return proxy.toString();
 }
+
+type SmtpTransportOptions = {
+  readonly host: string;
+  readonly port: number;
+  readonly secure: boolean;
+  readonly requireTLS: boolean;
+  readonly ignoreTLS: boolean;
+  readonly auth?: {
+    readonly user: string;
+    readonly pass: string;
+  };
+  readonly proxy?: string;
+  readonly connectionTimeout: number;
+  readonly greetingTimeout: number;
+  readonly socketTimeout: number;
+};
 
 const DEFAULT_SMTP_TIMEOUT_MS = 10_000;
 
