@@ -1,4 +1,4 @@
-import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import type {
@@ -33,6 +33,16 @@ export class AdminNotificationsService {
     await this.appendLog("error.log", payload);
   }
 
+  async clearLog(logType: "success" | "error"): Promise<void> {
+    await this.enqueueWrite(() => this.removeLog(`${logType}.log`));
+  }
+
+  async clearLogs(): Promise<void> {
+    await this.enqueueWrite(async () => {
+      await Promise.all([this.removeLog("success.log"), this.removeLog("error.log")]);
+    });
+  }
+
   async readLogs(limit = DEFAULT_READ_LIMIT): Promise<AdminNotificationLogs> {
     await this.redactLegacyPasswords();
     const [success, error] = await Promise.all([
@@ -47,9 +57,7 @@ export class AdminNotificationsService {
     logName: "success.log" | "error.log",
     payload: AdminSuccessNotification | AdminErrorNotification,
   ): Promise<void> {
-    const writeOperation = this.writeQueue
-      .catch(() => undefined)
-      .then(async () => {
+    await this.enqueueWrite(async () => {
         await mkdir(this.logDirectory, { recursive: true });
         const entry: AdminLogEntry = {
           timestamp: new Date().toISOString(),
@@ -64,9 +72,6 @@ export class AdminNotificationsService {
         await appendFile(logPath, `${JSON.stringify(entry)}\n`, "utf8");
         await this.trimLog(logPath);
       });
-
-    this.writeQueue = writeOperation;
-    await writeOperation;
   }
 
   private async readLog(
@@ -100,9 +105,7 @@ export class AdminNotificationsService {
   }
 
   private async redactLegacyPasswords(): Promise<void> {
-    const redactOperation = this.writeQueue
-      .catch(() => undefined)
-      .then(async () => {
+    await this.enqueueWrite(async () => {
         const logPath = join(this.logDirectory, "success.log");
         let content: string;
         try {
@@ -126,9 +129,22 @@ export class AdminNotificationsService {
           await writeFile(logPath, redactedLines.join("\n"), "utf8");
         }
       });
+  }
 
-    this.writeQueue = redactOperation;
-    await redactOperation;
+  private async removeLog(logName: "success.log" | "error.log"): Promise<void> {
+    try {
+      await unlink(join(this.logDirectory, logName));
+    } catch (error: unknown) {
+      if (!isFileNotFoundError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  private enqueueWrite(operation: () => Promise<void>): Promise<void> {
+    const queuedOperation = this.writeQueue.catch(() => undefined).then(operation);
+    this.writeQueue = queuedOperation;
+    return queuedOperation;
   }
 }
 

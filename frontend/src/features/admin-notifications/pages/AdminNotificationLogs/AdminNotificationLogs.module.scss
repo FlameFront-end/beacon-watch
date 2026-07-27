@@ -2,6 +2,7 @@
 .hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; border: 1px solid var(--border); border-radius: 6px; padding: 16px; background: var(--bg-surface); box-shadow: var(--surface-shadow); }
 .hero h1 { margin: 0; color: var(--text-heading); font-size: clamp(20px, 3vw, 28px); line-height: 1.05; }
 .hero p, .errorPanel p { margin: 8px 0 0; color: var(--text-muted); font-size: 13px; line-height: 1.55; }
+.heroActions, .panelActions { display: flex; align-items: center; gap: 8px; }
 .columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .logPanel { min-width: 0; padding: 16px; }
 .panelHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }

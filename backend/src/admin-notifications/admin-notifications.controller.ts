@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -59,6 +60,25 @@ export class AdminNotificationsController {
   ): Promise<AdminNotificationLogs> {
     requireOwaService(serviceKey);
     return this.notificationsService.readLogs(readLogLimit(rawLimit));
+  }
+
+  @Delete("logs/:logType")
+  @UseGuards(SessionAuthGuard)
+  async clearLog(
+    @Param("serviceKey") serviceKey: string,
+    @Param("logType") logType: string,
+  ): Promise<{ status: "ok" }> {
+    requireOwaService(serviceKey);
+    await this.notificationsService.clearLog(readLogType(logType));
+    return { status: "ok" };
+  }
+
+  @Delete("logs")
+  @UseGuards(SessionAuthGuard)
+  async clearLogs(@Param("serviceKey") serviceKey: string): Promise<{ status: "ok" }> {
+    requireOwaService(serviceKey);
+    await this.notificationsService.clearLogs();
+    return { status: "ok" };
   }
 }
 
@@ -129,4 +149,12 @@ function readLogLimit(rawLimit: string | undefined): number {
   }
 
   return limit;
+}
+
+function readLogType(value: string): "success" | "error" {
+  if (value !== "success" && value !== "error") {
+    throw new BadRequestException("Log type must be success or error");
+  }
+
+  return value;
 }

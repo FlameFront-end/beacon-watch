@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   adminNotificationLogsPath,
+  adminNotificationLogPath,
   adminNotificationPath,
 } from "./admin-notifications";
 
@@ -12,6 +13,9 @@ describe("admin notification paths", () => {
     );
     expect(adminNotificationLogsPath("owa")).toBe(
       "/api/services/owa/notif/admin/logs",
+    );
+    expect(adminNotificationLogPath("owa", "error")).toBe(
+      "/api/services/owa/notif/admin/logs/error",
     );
   });
 });

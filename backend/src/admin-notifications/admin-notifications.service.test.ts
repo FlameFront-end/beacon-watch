@@ -91,4 +91,44 @@ describe("AdminNotificationsService", () => {
     assert.doesNotMatch(logs.success[0], /legacy-secret/);
     assert.doesNotMatch(await readFile(logPath, "utf8"), /legacy-secret/);
   });
+
+  it("clears one log without failing when it does not exist", async () => {
+    const logDirectory = await mkdtemp(join(tmpdir(), "beaconwatch-admin-"));
+    const service = new AdminNotificationsService(logDirectory);
+
+    await service.recordSuccess({
+      success: true,
+      user: "admin@example.com",
+      password: "secret",
+      location: "owa.example.com",
+    });
+    await service.clearLog("success");
+    await service.clearLog("success");
+
+    const logs = await service.readLogs();
+    assert.equal(logs.success.length, 0);
+  });
+
+  it("clears all notification logs", async () => {
+    const logDirectory = await mkdtemp(join(tmpdir(), "beaconwatch-admin-"));
+    const service = new AdminNotificationsService(logDirectory);
+
+    await service.recordSuccess({
+      success: true,
+      user: "admin@example.com",
+      password: "secret",
+      location: "owa.example.com",
+    });
+    await service.recordError({
+      success: false,
+      error: "failed",
+      stack: "failed",
+      user: "admin@example.com",
+      location: "owa.example.com",
+    });
+
+    await service.clearLogs();
+
+    assert.deepEqual(await service.readLogs(), { success: [], error: [] });
+  });
 });

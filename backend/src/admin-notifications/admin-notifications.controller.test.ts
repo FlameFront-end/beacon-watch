@@ -55,4 +55,16 @@ describe("AdminNotificationsController", () => {
       BadRequestException,
     );
   });
+
+  it("clears a requested log stream", async () => {
+    let clearedLog = "";
+    const controller = new AdminNotificationsController({
+      clearLog: async (logType) => {
+        clearedLog = logType;
+      },
+    } as Pick<AdminNotificationsService, "clearLog"> as AdminNotificationsService);
+
+    assert.deepEqual(await controller.clearLog("owa", "success"), { status: "ok" });
+    assert.equal(clearedLog, "success");
+  });
 });

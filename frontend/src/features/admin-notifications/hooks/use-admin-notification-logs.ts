@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
 import {
+  clearAdminNotificationLog,
+  clearAdminNotificationLogs,
   getAdminNotificationLogs,
+  type AdminNotificationType,
   type AdminNotificationLogs,
 } from "@/shared/api/admin-notifications";
 import type { ServiceKey } from "@/shared/config/services";
@@ -12,6 +15,7 @@ export function useAdminNotificationLogs(serviceKey: ServiceKey) {
   const [logs, setLogs] = useState<AdminNotificationLogs>(EMPTY_LOGS);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [clearing, setClearing] = useState<AdminNotificationType | "all" | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -45,5 +49,35 @@ export function useAdminNotificationLogs(serviceKey: ServiceKey) {
     };
   }, [serviceKey]);
 
-  return { logs, isLoading, error };
+  const clearLog = async (type: AdminNotificationType): Promise<void> => {
+    setClearing(type);
+    try {
+      await clearAdminNotificationLog(serviceKey, type);
+      setLogs((currentLogs) => ({ ...currentLogs, [type]: [] }));
+      setError(null);
+    } catch (clearError: unknown) {
+      const message = clearError instanceof Error ? clearError.message : "Failed to clear admin logs";
+      setError(message);
+      throw clearError;
+    } finally {
+      setClearing(null);
+    }
+  };
+
+  const clearAll = async (): Promise<void> => {
+    setClearing("all");
+    try {
+      await clearAdminNotificationLogs(serviceKey);
+      setLogs(EMPTY_LOGS);
+      setError(null);
+    } catch (clearError: unknown) {
+      const message = clearError instanceof Error ? clearError.message : "Failed to clear admin logs";
+      setError(message);
+      throw clearError;
+    } finally {
+      setClearing(null);
+    }
+  };
+
+  return { logs, isLoading, error, clearing, clearLog, clearAll };
 }
