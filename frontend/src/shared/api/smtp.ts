@@ -15,6 +15,10 @@ export type SmtpSettings = {
   readonly from: string;
   readonly user: string;
   readonly hasPassword: boolean;
+  readonly proxyHost: string;
+  readonly proxyPort: number;
+  readonly proxyUser: string;
+  readonly hasProxyPassword: boolean;
 };
 
 export type UpdateSmtpSettingsRequest = {
@@ -25,6 +29,10 @@ export type UpdateSmtpSettingsRequest = {
   readonly from: string;
   readonly user: string;
   readonly password: string;
+  readonly proxyHost: string;
+  readonly proxyPort: number;
+  readonly proxyUser: string;
+  readonly proxyPassword: string;
 };
 
 export async function sendMail(request: SendMailRequest): Promise<void> {

@@ -7,6 +7,7 @@ import { AdminNotificationsModule } from "./admin-notifications/admin-notificati
 import { BeaconsModule } from "./beacons/beacons.module.js";
 import { BeaconEntity } from "./beacons/beacon.entity.js";
 import { InitialSchemaAndSmtpTls1785078000000 } from "./database/migrations/1785078000000-initial-schema-and-smtp-tls.js";
+import { AddSocks5SmtpProxy1785090000000 } from "./database/migrations/1785090000000-add-socks5-smtp-proxy.js";
 import { AddServiceScoping1785085200000 } from "./database/migrations/1785085200000-add-service-scoping.js";
 import { MailEntity } from "./mails/mail.entity.js";
 import { SmtpSettingsEntity } from "./mails/smtp-settings.entity.js";
@@ -32,6 +33,7 @@ import { SseModule } from "./sse/sse.module.js";
         migrations: [
           InitialSchemaAndSmtpTls1785078000000,
           AddServiceScoping1785085200000,
+          AddSocks5SmtpProxy1785090000000,
         ],
         migrationsRun: true,
         synchronize: false,

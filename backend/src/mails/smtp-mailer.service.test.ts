@@ -27,6 +27,7 @@ describe("SmtpMailerService", () => {
       capturedOptions.push(options);
       return {
         sendMail: async () => ({ accepted: ["recipient@example.com"] }),
+        set: () => new Map(),
       };
     }) as typeof nodemailer.createTransport;
 
@@ -98,6 +99,24 @@ describe("SmtpMailerService", () => {
     assert.equal(options.ignoreTLS, true);
     assert.equal(options.auth, undefined);
   });
+
+  it("uses the configured SOCKS5 proxy with proxy authentication", async () => {
+    const options = await captureTransportOptions({
+      host: "smtp.example.com",
+      port: 587,
+      secure: false,
+      requireTls: true,
+      from: "sender@example.com",
+      user: "sender@example.com",
+      password: "secret",
+      proxyHost: "127.0.0.1",
+      proxyPort: 1080,
+      proxyUser: "proxy user",
+      proxyPassword: "proxy/pass",
+    });
+
+    assert.equal(options.proxy, "socks5://proxy%20user:proxy%2Fpass@127.0.0.1:1080");
+  });
 });
 
 async function captureTransportOptions(
@@ -109,6 +128,7 @@ async function captureTransportOptions(
     capturedOptions = options;
     return {
       sendMail: async () => ({ accepted: ["recipient@example.com"] }),
+      set: () => new Map(),
     };
   }) as typeof nodemailer.createTransport;
 

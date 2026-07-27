@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
+import * as socks from "socks";
 
 import type { MailSender, OutgoingMail } from "./mail-sending.service.js";
 import { SmtpSettingsService } from "./smtp-settings.service.js";
@@ -25,7 +26,7 @@ export class SmtpMailerService implements MailSender {
       throw new Error("SMTP_FROM is required");
     }
 
-    const transporter: Transporter = nodemailer.createTransport({
+    const transportOptions = {
       host: settings.host,
       port: settings.port,
       secure: settings.secure,
@@ -34,10 +35,17 @@ export class SmtpMailerService implements MailSender {
       auth: settings.user && settings.password
         ? { user: settings.user, pass: settings.password }
         : undefined,
+      proxy: settings.proxyHost
+        ? buildSocks5ProxyUrl(settings)
+        : undefined,
       connectionTimeout: timeoutMs,
       greetingTimeout: timeoutMs,
       socketTimeout: timeoutMs,
-    });
+    } as unknown as Parameters<typeof nodemailer.createTransport>[0];
+    const transporter: Transporter = nodemailer.createTransport(transportOptions);
+    if (settings.proxyHost) {
+      transporter.set("proxy_socks_module", socks);
+    }
 
     await transporter.sendMail({
       from,
@@ -49,6 +57,21 @@ export class SmtpMailerService implements MailSender {
 
     this.logger.log(`SMTP message accepted for ${message.to}`);
   }
+}
+
+function buildSocks5ProxyUrl(settings: {
+  readonly proxyHost: string;
+  readonly proxyPort: number;
+  readonly proxyUser: string;
+  readonly proxyPassword: string;
+}): string {
+  const proxy = new URL(`socks5://${settings.proxyHost}:${settings.proxyPort}`);
+  if (settings.proxyUser) {
+    proxy.username = settings.proxyUser;
+    proxy.password = settings.proxyPassword;
+  }
+
+  return proxy.toString();
 }
 
 const DEFAULT_SMTP_TIMEOUT_MS = 10_000;

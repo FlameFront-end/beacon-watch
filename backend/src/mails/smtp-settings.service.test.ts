@@ -21,6 +21,10 @@ describe("SmtpSettingsService", () => {
       from: "sender@example.com",
       user: "sender@example.com",
       hasPassword: true,
+      proxyHost: "",
+      proxyPort: 1080,
+      proxyUser: "",
+      hasProxyPassword: false,
     });
   });
 
@@ -43,6 +47,65 @@ describe("SmtpSettingsService", () => {
 
     const reloaded = new SmtpSettingsService(repository, config);
     assert.equal((await reloaded.get()).password, "new-secret");
+  });
+
+  it("persists SOCKS5 settings and encrypts the proxy password", async () => {
+    const repository = createRepository();
+    const config = createConfig();
+    const service = new SmtpSettingsService(repository, config);
+
+    await service.update({
+      host: "smtp.example.com",
+      port: 587,
+      secure: false,
+      requireTls: true,
+      from: "sender@example.com",
+      user: "sender@example.com",
+      password: "new-secret",
+      proxyHost: "proxy.example.com",
+      proxyPort: 1080,
+      proxyUser: "proxy-user",
+      proxyPassword: "proxy-secret",
+    });
+
+    assert.equal(repository.saved?.encryptedProxyPassword.includes("proxy-secret"), false);
+    const reloaded = new SmtpSettingsService(repository, config);
+
+    assert.deepEqual(await reloaded.getPublic(), {
+      host: "smtp.example.com",
+      port: 587,
+      secure: false,
+      requireTls: true,
+      from: "sender@example.com",
+      user: "sender@example.com",
+      hasPassword: true,
+      proxyHost: "proxy.example.com",
+      proxyPort: 1080,
+      proxyUser: "proxy-user",
+      hasProxyPassword: true,
+    });
+    assert.equal((await reloaded.get()).proxyPassword, "proxy-secret");
+  });
+
+  it("requires a SOCKS5 proxy host and port together", async () => {
+    const service = new SmtpSettingsService(createRepository(), createConfig());
+
+    await assert.rejects(
+      () => service.update({
+        host: "smtp.example.com",
+        port: 587,
+        secure: false,
+        requireTls: true,
+        from: "sender@example.com",
+        user: "sender@example.com",
+        password: "new-secret",
+        proxyHost: "proxy.example.com",
+        proxyPort: 0,
+        proxyUser: "",
+        proxyPassword: "",
+      }),
+      { message: "SOCKS5 proxy port must be between 1 and 65535" },
+    );
   });
 
   it("accepts sender domains containing the letter s", async () => {
@@ -217,6 +280,10 @@ function createConfigValues(): Record<string, string> {
     SMTP_USER: "sender@example.com",
     SMTP_PASSWORD: "initial-secret",
     SMTP_SETTINGS_ENCRYPTION_KEY: "test-encryption-key",
+    SMTP_SOCKS5_HOST: "",
+    SMTP_SOCKS5_PORT: "1080",
+    SMTP_SOCKS5_USER: "",
+    SMTP_SOCKS5_PASSWORD: "",
   };
 }
 

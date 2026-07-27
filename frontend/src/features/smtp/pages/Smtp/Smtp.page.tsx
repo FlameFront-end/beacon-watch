@@ -184,6 +184,10 @@ function SmtpSettingsPanel(): JSX.Element {
   const [from, setFrom] = useState("");
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
+  const [proxyHost, setProxyHost] = useState("");
+  const [proxyPort, setProxyPort] = useState("1080");
+  const [proxyUser, setProxyUser] = useState("");
+  const [proxyPassword, setProxyPassword] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -192,6 +196,10 @@ function SmtpSettingsPanel(): JSX.Element {
     user && settings?.hasPassword && user === settings.user,
   );
   const isPasswordRequired = Boolean(user) && !canReuseStoredPassword;
+  const canReuseProxyPassword = Boolean(
+    proxyUser && settings?.hasProxyPassword && proxyUser === settings.proxyUser,
+  );
+  const isProxyPasswordRequired = Boolean(proxyUser) && !canReuseProxyPassword;
 
   useEffect(() => {
     void getSmtpSettings()
@@ -202,6 +210,9 @@ function SmtpSettingsPanel(): JSX.Element {
         setTlsMode(toTlsMode(currentSettings));
         setFrom(currentSettings.from);
         setUser(currentSettings.user);
+        setProxyHost(currentSettings.proxyHost);
+        setProxyPort(String(currentSettings.proxyPort));
+        setProxyUser(currentSettings.proxyUser);
       })
       .catch(() => setError("Failed to load SMTP settings"))
       .finally(() => setIsLoading(false));
@@ -222,6 +233,10 @@ function SmtpSettingsPanel(): JSX.Element {
         from,
         user,
         password,
+        proxyHost,
+        proxyPort: Number(proxyPort),
+        proxyUser,
+        proxyPassword,
       });
       setSettings(updated);
       setHost(updated.host);
@@ -230,6 +245,10 @@ function SmtpSettingsPanel(): JSX.Element {
       setFrom(updated.from);
       setUser(updated.user);
       setPassword("");
+      setProxyHost(updated.proxyHost);
+      setProxyPort(String(updated.proxyPort));
+      setProxyUser(updated.proxyUser);
+      setProxyPassword("");
       setStatus("SMTP settings saved");
     } catch (saveError: unknown) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save SMTP settings");
@@ -321,9 +340,56 @@ function SmtpSettingsPanel(): JSX.Element {
               <option value="implicit">Implicit TLS (usually port 465)</option>
             </select>
           </label>
+          <label>
+            <span>SOCKS5 proxy host</span>
+            <input
+              name="proxyHost"
+              value={proxyHost}
+              onChange={(event) => setProxyHost(event.target.value)}
+              placeholder="Optional"
+            />
+          </label>
+          <label>
+            <span>SOCKS5 proxy port</span>
+            <input
+              name="proxyPort"
+              type="number"
+              min="1"
+              max="65535"
+              value={proxyPort}
+              onChange={(event) => setProxyPort(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>SOCKS5 proxy user</span>
+            <input
+              name="proxyUser"
+              value={proxyUser}
+              onChange={(event) => {
+                const nextUser = event.target.value;
+                setProxyUser(nextUser);
+                if (!nextUser) {
+                  setProxyPassword("");
+                }
+              }}
+            />
+          </label>
+          <label>
+            <span>
+              SOCKS5 proxy password {canReuseProxyPassword ? "(leave blank to keep)" : proxyUser ? "(required)" : ""}
+            </span>
+            <input
+              name="proxyPassword"
+              type="password"
+              value={proxyPassword}
+              required={isProxyPasswordRequired}
+              disabled={!proxyUser}
+              onChange={(event) => setProxyPassword(event.target.value)}
+            />
+          </label>
           <p className={styles.settingsHint}>
             Authentication requires STARTTLS or implicit TLS. Clearing the SMTP
-            user also removes the stored password.
+            user also removes the stored password. SOCKS5 is disabled when its host is empty.
           </p>
           <div className={styles.actions}>
             <Button type="submit" isLoading={isSaving}>

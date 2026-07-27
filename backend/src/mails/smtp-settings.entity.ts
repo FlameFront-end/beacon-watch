@@ -32,6 +32,24 @@ export class SmtpSettingsEntity {
   @Column({ type: "text" })
   passwordTag!: string;
 
+  @Column({ type: "text", default: "" })
+  proxyHost!: string;
+
+  @Column({ type: "int", default: 1080 })
+  proxyPort!: number;
+
+  @Column({ type: "text", default: "" })
+  proxyUser!: string;
+
+  @Column({ type: "text", default: "" })
+  encryptedProxyPassword!: string;
+
+  @Column({ type: "text", default: "" })
+  proxyPasswordIv!: string;
+
+  @Column({ type: "text", default: "" })
+  proxyPasswordTag!: string;
+
   @Column({ type: "timestamptz", default: () => "now()" })
   updatedAt!: Date;
 }

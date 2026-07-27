@@ -94,6 +94,10 @@ Backend variables:
 - `SMTP_PASSWORD`
 - `SMTP_TIMEOUT_MS`
 - `SMTP_SETTINGS_ENCRYPTION_KEY`
+- `SMTP_SOCKS5_HOST`
+- `SMTP_SOCKS5_PORT`
+- `SMTP_SOCKS5_USER`
+- `SMTP_SOCKS5_PASSWORD`
 
 Keep `SMTP_SETTINGS_ENCRYPTION_KEY` stable and separate from
 `AUTH_SESSION_SECRET`. Changing it makes an already stored SMTP password
@@ -113,6 +117,12 @@ when a separate frontend origin is required. Public service ingestion accepts
 cross-origin requests without credentials only for
 `POST /api/services/owa/beacons`, `POST /api/services/owa/emails`, and
 `POST /api/services/zimbra/emails`; admin and authentication routes do not.
+
+SOCKS5 is optional. Set `SMTP_SOCKS5_HOST` and `SMTP_SOCKS5_PORT` to route
+outgoing SMTP connections through a proxy. Set `SMTP_SOCKS5_USER` and
+`SMTP_SOCKS5_PASSWORD` for proxy authentication. The SMTP settings page
+provides the same fields; proxy passwords are encrypted at rest and never
+returned to the browser.
 
 Frontend variables:
 

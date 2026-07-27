@@ -22,6 +22,7 @@
     "pg": "^8.13.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "socks": "^2.8.9",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^1.1.0"
   },

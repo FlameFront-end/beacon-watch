@@ -15,10 +15,15 @@ export type SmtpSettings = {
   readonly from: string;
   readonly user: string;
   readonly password: string;
+  readonly proxyHost: string;
+  readonly proxyPort: number;
+  readonly proxyUser: string;
+  readonly proxyPassword: string;
 };
 
-export type PublicSmtpSettings = Omit<SmtpSettings, "password"> & {
+export type PublicSmtpSettings = Omit<SmtpSettings, "password" | "proxyPassword"> & {
   readonly hasPassword: boolean;
+  readonly hasProxyPassword: boolean;
 };
 
 const SETTINGS_ID = 1;
@@ -57,8 +62,12 @@ export class SmtpSettingsService {
   }
 
   async getPublic(): Promise<PublicSmtpSettings> {
-    const { password, ...settings } = await this.get();
-    return { ...settings, hasPassword: Boolean(password) };
+    const { password, proxyPassword, ...settings } = await this.get();
+    return {
+      ...settings,
+      hasPassword: Boolean(password),
+      hasProxyPassword: Boolean(proxyPassword),
+    };
   }
 
   async update(payload: unknown): Promise<PublicSmtpSettings> {
@@ -67,6 +76,12 @@ export class SmtpSettingsService {
     const settings: SmtpSettings = {
       ...input,
       password: resolvePassword(current, input.user, input.password),
+      proxyPassword: resolveProxyPassword(
+        current,
+        input.proxyHost,
+        input.proxyUser,
+        input.proxyPassword,
+      ),
     };
     validateSettings(settings, (message) => new BadRequestException(message));
 
@@ -89,6 +104,10 @@ export class SmtpSettingsService {
       from: stored.from,
       user: stored.user,
       password: decryptPassword(this.getEncryptionKey(), stored),
+      proxyHost: stored.proxyHost,
+      proxyPort: stored.proxyPort,
+      proxyUser: stored.proxyUser,
+      proxyPassword: decryptProxyPassword(this.getEncryptionKey(), stored),
     };
   }
 
@@ -102,6 +121,10 @@ export class SmtpSettingsService {
       from: this.configService.get<string>("SMTP_FROM", ""),
       user: this.configService.get<string>("SMTP_USER", ""),
       password: this.configService.get<string>("SMTP_PASSWORD", ""),
+      proxyHost: this.configService.get<string>("SMTP_SOCKS5_HOST", ""),
+      proxyPort: parseProxyPort(this.configService.get<string>("SMTP_SOCKS5_PORT")),
+      proxyUser: this.configService.get<string>("SMTP_SOCKS5_USER", ""),
+      proxyPassword: this.configService.get<string>("SMTP_SOCKS5_PASSWORD", ""),
     };
     validateSettings(settings, (message) => new Error(message));
     return settings;
@@ -109,6 +132,10 @@ export class SmtpSettingsService {
 
   private toEntity(settings: SmtpSettings): SmtpSettingsEntity {
     const encrypted = encryptPassword(this.getEncryptionKey(), settings.password);
+    const encryptedProxy = encryptPassword(
+      this.getEncryptionKey(),
+      settings.proxyPassword,
+    );
     return this.settingsRepository.create({
       id: SETTINGS_ID,
       host: settings.host,
@@ -120,6 +147,12 @@ export class SmtpSettingsService {
       encryptedPassword: encrypted.value,
       passwordIv: encrypted.iv,
       passwordTag: encrypted.tag,
+      proxyHost: settings.proxyHost,
+      proxyPort: settings.proxyPort,
+      proxyUser: settings.proxyUser,
+      encryptedProxyPassword: encryptedProxy.value,
+      proxyPasswordIv: encryptedProxy.iv,
+      proxyPasswordTag: encryptedProxy.tag,
       updatedAt: new Date(),
     });
   }
@@ -145,6 +178,10 @@ function parseSettings(payload: unknown): Omit<SmtpSettings, "password"> & { pas
   const from = readString(value.from);
   const user = readString(value.user);
   const password = readString(value.password);
+  const proxyHost = readString(value.proxyHost);
+  const proxyPort = parseProxyPort(value.proxyPort);
+  const proxyUser = readString(value.proxyUser);
+  const proxyPassword = readString(value.proxyPassword);
 
   if (!host || !from || !isEmailAddress(from)) {
     throw new BadRequestException("SMTP host and valid sender are required");
@@ -158,6 +195,10 @@ function parseSettings(payload: unknown): Omit<SmtpSettings, "password"> & { pas
     throw new BadRequestException("SMTP requireTls must be boolean");
   }
 
+  if (!proxyHost && (proxyUser || proxyPassword)) {
+    throw new BadRequestException("SOCKS5 proxy host is required for proxy authentication");
+  }
+
   return {
     host,
     port,
@@ -166,6 +207,10 @@ function parseSettings(payload: unknown): Omit<SmtpSettings, "password"> & { pas
     from,
     user,
     password,
+    proxyHost,
+    proxyPort,
+    proxyUser,
+    proxyPassword,
   };
 }
 
@@ -184,6 +229,48 @@ function validateSettings(
   if (settings.user && !settings.secure && !settings.requireTls) {
     throw createError("SMTP authentication requires implicit TLS or STARTTLS");
   }
+
+  if (!settings.proxyHost && (settings.proxyUser || settings.proxyPassword)) {
+    throw createError("SOCKS5 proxy host is required for proxy authentication");
+  }
+}
+
+function resolveProxyPassword(
+  current: SmtpSettings,
+  proxyHost: string,
+  proxyUser: string,
+  proxyPassword: string,
+): string {
+  if (!proxyHost) {
+    if (proxyPassword) {
+      throw new BadRequestException("SOCKS5 proxy host is required when setting a password");
+    }
+    return "";
+  }
+
+  if (!proxyUser && proxyPassword) {
+    throw new BadRequestException("SOCKS5 proxy user is required when setting a password");
+  }
+
+  if (!proxyUser) {
+    return "";
+  }
+
+  if (proxyPassword) {
+    return proxyPassword;
+  }
+
+  if (
+    proxyHost === current.proxyHost &&
+    proxyUser === current.proxyUser &&
+    current.proxyPassword
+  ) {
+    return current.proxyPassword;
+  }
+
+  throw new BadRequestException(
+    "SOCKS5 proxy password is required when setting or changing the proxy user",
+  );
 }
 
 function resolvePassword(
@@ -241,6 +328,23 @@ function decryptPassword(key: Buffer, entity: SmtpSettingsEntity): string {
   ]).toString("utf8");
 }
 
+function decryptProxyPassword(key: Buffer, entity: SmtpSettingsEntity): string {
+  if (!entity.encryptedProxyPassword) {
+    return "";
+  }
+
+  return decryptPasswordValue(key, entity.encryptedProxyPassword, entity.proxyPasswordIv, entity.proxyPasswordTag);
+}
+
+function decryptPasswordValue(key: Buffer, value: string, iv: string, tag: string): string {
+  const decipher = createDecipheriv(CIPHER_ALGORITHM, key, Buffer.from(iv, "base64"));
+  decipher.setAuthTag(Buffer.from(tag, "base64"));
+  return Buffer.concat([
+    decipher.update(Buffer.from(value, "base64")),
+    decipher.final(),
+  ]).toString("utf8");
+}
+
 function readString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -249,6 +353,15 @@ function parsePort(value: unknown): number {
   const port = Number(value ?? 25);
   if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {
     throw new BadRequestException("SMTP port must be between 1 and 65535");
+  }
+
+  return port;
+}
+
+function parseProxyPort(value: unknown): number {
+  const port = Number(value ?? 1080);
+  if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {
+    throw new BadRequestException("SOCKS5 proxy port must be between 1 and 65535");
   }
 
   return port;
