@@ -9,6 +9,11 @@ import { MailsDashboardPage } from "@/features/mails/pages/MailsDashboard/MailsD
 import { AdminNotificationLogsPage } from "@/features/admin-notifications/pages/AdminNotificationLogs/AdminNotificationLogs.page";
 import { ServicesPage } from "@/features/services/pages/Services/Services.page";
 import { SmtpPage } from "@/features/smtp/pages/Smtp/Smtp.page";
+import { CollectionRunsPage } from "@/features/vulnerability-monitoring/pages/CollectionRuns/CollectionRuns.page";
+import { VulnerabilityDetailsPage } from "@/features/vulnerability-monitoring/pages/VulnerabilityDetails/VulnerabilityDetails.page";
+import { VulnerabilityFeedPage } from "@/features/vulnerability-monitoring/pages/VulnerabilityFeed/VulnerabilityFeed.page";
+import { VulnerabilitySourcesPage } from "@/features/vulnerability-monitoring/pages/VulnerabilitySources/VulnerabilitySources.page";
+import { WatchRulesPage } from "@/features/vulnerability-monitoring/pages/WatchRules/WatchRules.page";
 import { Layout } from "@/shared/widgets/Layout/Layout";
 
 import { RequireAuth } from "./RequireAuth";
@@ -23,6 +28,11 @@ export function AppRouter(): ReactElement {
             <Switch>
               <Route path="/" component={ServicesPage} />
               <Route path="/smtp" component={SmtpPage} />
+              <Route path="/vulnerability-monitoring" component={VulnerabilityFeedPage} />
+              <Route path="/vulnerability-monitoring/sources" component={VulnerabilitySourcesPage} />
+              <Route path="/vulnerability-monitoring/watch-rules" component={WatchRulesPage} />
+              <Route path="/vulnerability-monitoring/runs" component={CollectionRunsPage} />
+              <Route path="/vulnerability-monitoring/:id" component={VulnerabilityDetailsPage} />
               <Route path="/owa" component={RedirectToOwaBeacons} />
               <Route path="/owa/beacons" component={OwaBeaconsDashboardPage} />
               <Route path="/owa/beacons/:beaconId" component={OwaBeaconDetailsPage} />

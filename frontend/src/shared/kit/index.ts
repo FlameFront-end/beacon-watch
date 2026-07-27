@@ -1,5 +1,5 @@
 export { Button } from "./Buttons";
-export { Badge } from "./UI/Badge/Badge";
+export { Badge, type BadgeTone } from "./UI/Badge/Badge";
 export { EmptyState } from "./UI/EmptyState/EmptyState";
 export { Modal } from "./UI/Modal/Modal";
 export { Panel } from "./UI/Panel/Panel";

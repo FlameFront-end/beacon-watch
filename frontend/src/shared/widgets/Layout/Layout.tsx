@@ -1,7 +1,7 @@
 import type { JSX, PropsWithChildren } from "react";
 
 import { Link, useLocation } from "wouter";
-import { Activity, Home, LogOut, Mail, MoonStar, SunMedium } from "lucide-react";
+import { Activity, Home, LogOut, Mail, MoonStar, ShieldAlert, SunMedium } from "lucide-react";
 import clsx from "clsx";
 
 import { getRegisteredService } from "@/shared/config/services";
@@ -27,7 +27,9 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
         ? "SMTP"
         : location.startsWith("/owa/beacons/")
         ? "Beacon details"
-        : activeService?.name ?? "BeaconWatch";
+        : location.startsWith("/vulnerability-monitoring")
+          ? "Vulnerability monitoring"
+          : activeService?.name ?? "BeaconWatch";
 
   return (
     <div className={styles.layout}>
@@ -57,6 +59,17 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
             >
               <Mail size={14} aria-hidden="true" />
               <span>SMTP</span>
+            </Link>
+            <Link
+              href="/vulnerability-monitoring"
+              className={clsx(
+                styles.navLink,
+                location.startsWith("/vulnerability-monitoring") && styles.activeNavLink,
+              )}
+              aria-current={location.startsWith("/vulnerability-monitoring") ? "page" : undefined}
+            >
+              <ShieldAlert size={14} aria-hidden="true" />
+              <span>Vulnerabilities</span>
             </Link>
           </nav>
 

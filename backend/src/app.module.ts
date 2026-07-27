@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ScheduleModule } from "@nestjs/schedule";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { AuthModule } from "./auth/auth.module.js";
@@ -9,10 +10,20 @@ import { BeaconEntity } from "./beacons/beacon.entity.js";
 import { InitialSchemaAndSmtpTls1785078000000 } from "./database/migrations/1785078000000-initial-schema-and-smtp-tls.js";
 import { AddSocks5SmtpProxy1785090000000 } from "./database/migrations/1785090000000-add-socks5-smtp-proxy.js";
 import { AddServiceScoping1785085200000 } from "./database/migrations/1785085200000-add-service-scoping.js";
+import { AddVulnerabilityMonitoring1785100000000 } from "./database/migrations/1785100000000-add-vulnerability-monitoring.js";
 import { MailEntity } from "./mails/mail.entity.js";
 import { SmtpSettingsEntity } from "./mails/smtp-settings.entity.js";
 import { MailsModule } from "./mails/mails.module.js";
 import { SseModule } from "./sse/sse.module.js";
+import { VulnerabilityChangeLogEntity } from "./vulnerability-monitoring/entities/vulnerability-change-log.entity.js";
+import { VulnerabilityCollectionRunEntity } from "./vulnerability-monitoring/entities/vulnerability-collection-run.entity.js";
+import { VulnerabilityNotificationDeliveryEntity } from "./vulnerability-monitoring/entities/vulnerability-notification-delivery.entity.js";
+import { VulnerabilityReferenceEntity } from "./vulnerability-monitoring/entities/vulnerability-reference.entity.js";
+import { VulnerabilitySourceLockEntity } from "./vulnerability-monitoring/entities/vulnerability-source-lock.entity.js";
+import { VulnerabilitySourceRecordEntity } from "./vulnerability-monitoring/entities/vulnerability-source-record.entity.js";
+import { VulnerabilityWatchRuleEntity } from "./vulnerability-monitoring/entities/vulnerability-watch-rule.entity.js";
+import { VulnerabilityEntity } from "./vulnerability-monitoring/entities/vulnerability.entity.js";
+import { VulnerabilityMonitoringModule } from "./vulnerability-monitoring/vulnerability-monitoring.module.js";
 
 @Module({
   imports: [
@@ -20,6 +31,7 @@ import { SseModule } from "./sse/sse.module.js";
       isGlobal: true,
       envFilePath: [".env", "../.env"],
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -29,11 +41,24 @@ import { SseModule } from "./sse/sse.module.js";
         username: configService.get<string>("DB_USER", "beaconwatch"),
         password: configService.get<string>("DB_PASS", "beaconwatch"),
         database: configService.get<string>("DB_NAME", "beaconwatch"),
-        entities: [BeaconEntity, MailEntity, SmtpSettingsEntity],
+        entities: [
+          BeaconEntity,
+          MailEntity,
+          SmtpSettingsEntity,
+          VulnerabilityEntity,
+          VulnerabilitySourceRecordEntity,
+          VulnerabilityReferenceEntity,
+          VulnerabilityWatchRuleEntity,
+          VulnerabilityCollectionRunEntity,
+          VulnerabilityChangeLogEntity,
+          VulnerabilityNotificationDeliveryEntity,
+          VulnerabilitySourceLockEntity,
+        ],
         migrations: [
           InitialSchemaAndSmtpTls1785078000000,
           AddServiceScoping1785085200000,
           AddSocks5SmtpProxy1785090000000,
+          AddVulnerabilityMonitoring1785100000000,
         ],
         migrationsRun: true,
         synchronize: false,
@@ -45,6 +70,7 @@ import { SseModule } from "./sse/sse.module.js";
     BeaconsModule,
     MailsModule,
     SseModule,
+    VulnerabilityMonitoringModule,
   ],
 })
 export class AppModule {}

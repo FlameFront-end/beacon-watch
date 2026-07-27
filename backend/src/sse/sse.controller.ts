@@ -22,3 +22,19 @@ export class SseController {
     );
   }
 }
+
+@Controller("api/admin/vulnerability-monitoring/events")
+export class VulnerabilityMonitoringSseController {
+  constructor(@Inject(SseService) private readonly sseService: SseService) {}
+
+  @Sse()
+  @UseGuards(SessionAuthGuard)
+  stream(): Observable<MessageEvent> {
+    return this.sseService.vulnerabilityMonitoringEvents$.pipe(
+      map(({ event, data }): MessageEvent => ({
+        type: event,
+        data,
+      })),
+    );
+  }
+}

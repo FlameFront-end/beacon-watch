@@ -163,6 +163,10 @@ skipping duplicate mail IDs within each service scope.
 Service-scoped reads, deletes, and event streams require the admin session
 cookie created by `POST /auth/login`.
 
+An automated vulnerability/CVE intelligence subsystem lives under
+`/api/admin/vulnerability-monitoring/*` and the `/vulnerability-monitoring`
+admin page. See [docs/vulnerability-monitoring.md](docs/vulnerability-monitoring.md).
+
 SMTP is global across services. `POST /api/smtp/send` requires the admin
 session cookie and sends a message through the configured SMTP server. The
 optional `html` field is sent unchanged as the HTML representation.
