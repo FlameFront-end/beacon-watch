@@ -12,6 +12,7 @@ import { useTheme } from "@/shared/hooks/use-theme";
 import styles from "./Layout.module.scss";
 import { Logo } from "./Logo";
 import { ServiceNavigation } from "../ServiceNavigation/ServiceNavigation";
+import { VulnerabilityNavigation } from "../VulnerabilityNavigation/VulnerabilityNavigation";
 
 export function Layout({ children }: PropsWithChildren): JSX.Element {
   const [location] = useLocation();
@@ -103,6 +104,9 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
 
       <main className={styles.main}>
         {activeService ? <ServiceNavigation service={activeService} /> : null}
+        {location.startsWith("/vulnerability-monitoring") ? (
+          <VulnerabilityNavigation currentPath={location} />
+        ) : null}
         <div className={styles.content}>{children}</div>
       </main>
     </div>

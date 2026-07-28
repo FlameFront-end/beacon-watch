@@ -11,6 +11,9 @@ import { InitialSchemaAndSmtpTls1785078000000 } from "./database/migrations/1785
 import { AddSocks5SmtpProxy1785090000000 } from "./database/migrations/1785090000000-add-socks5-smtp-proxy.js";
 import { AddServiceScoping1785085200000 } from "./database/migrations/1785085200000-add-service-scoping.js";
 import { AddVulnerabilityMonitoring1785100000000 } from "./database/migrations/1785100000000-add-vulnerability-monitoring.js";
+import { LiveFirstVulnerabilityMonitoring1785110000000 } from "./database/migrations/1785110000000-live-first-vulnerability-monitoring.js";
+import { BackfillGithubAdvisoryPackages1785211200000 } from "./database/migrations/1785211200000-backfill-github-advisory-packages.js";
+import { RepairGithubAdvisoryNormalization1785301200000 } from "./database/migrations/1785301200000-repair-github-advisory-normalization.js";
 import { MailEntity } from "./mails/mail.entity.js";
 import { SmtpSettingsEntity } from "./mails/smtp-settings.entity.js";
 import { MailsModule } from "./mails/mails.module.js";
@@ -59,6 +62,9 @@ import { VulnerabilityMonitoringModule } from "./vulnerability-monitoring/vulner
           AddServiceScoping1785085200000,
           AddSocks5SmtpProxy1785090000000,
           AddVulnerabilityMonitoring1785100000000,
+          LiveFirstVulnerabilityMonitoring1785110000000,
+          BackfillGithubAdvisoryPackages1785211200000,
+          RepairGithubAdvisoryNormalization1785301200000,
         ],
         migrationsRun: true,
         synchronize: false,

@@ -14,7 +14,7 @@ import {
   updateSmtpSettings,
   type SmtpSettings,
 } from "@/shared/api/smtp";
-import { Button, Panel, Select } from "@/shared/kit";
+import { Button, Checkbox, Panel, Select } from "@/shared/kit";
 import { readHtmlFile } from "@/features/mails/lib/read-html-file";
 
 import styles from "./Smtp.module.scss";
@@ -161,15 +161,13 @@ function SendMailPanel(): JSX.Element {
             <span className={styles.importedFileName}>{importedFileName}</span>
           ) : null}
         </div>
-        <label className={styles.htmlToggle}>
-          <input
-            name="isHtml"
-            type="checkbox"
-            checked={isHtml}
-            onChange={(event) => setIsHtml(event.target.checked)}
-          />
-          <span>Render message as HTML</span>
-        </label>
+        <Checkbox
+          className={styles.htmlToggle}
+          name="isHtml"
+          label="Render message as HTML"
+          checked={isHtml}
+          onChange={(event) => setIsHtml(event.target.checked)}
+        />
         <div className={styles.actions}>
           <Button type="submit" isLoading={isSending}>
             Send message

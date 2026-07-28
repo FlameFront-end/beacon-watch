@@ -1,5 +1,6 @@
 export { Button } from "./Buttons";
 export { Badge, type BadgeTone } from "./UI/Badge/Badge";
+export { Checkbox, type CheckboxProps } from "./UI/Checkbox/Checkbox";
 export { EmptyState } from "./UI/EmptyState/EmptyState";
 export { Modal } from "./UI/Modal/Modal";
 export { Panel } from "./UI/Panel/Panel";
