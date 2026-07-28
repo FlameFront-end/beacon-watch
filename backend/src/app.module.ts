@@ -15,6 +15,7 @@ import { LiveFirstVulnerabilityMonitoring1785110000000 } from "./database/migrat
 import { BackfillGithubAdvisoryPackages1785211200000 } from "./database/migrations/1785211200000-backfill-github-advisory-packages.js";
 import { RepairGithubAdvisoryNormalization1785301200000 } from "./database/migrations/1785301200000-repair-github-advisory-normalization.js";
 import { BackfillVendorProductFieldSources1785310000000 } from "./database/migrations/1785310000000-backfill-vendor-product-field-sources.js";
+import { AddCorporateXssWatchRules1785320000000 } from "./database/migrations/1785320000000-add-corporate-xss-watch-rules.js";
 import { MailEntity } from "./mails/mail.entity.js";
 import { SmtpSettingsEntity } from "./mails/smtp-settings.entity.js";
 import { MailsModule } from "./mails/mails.module.js";
@@ -67,6 +68,7 @@ import { VulnerabilityMonitoringModule } from "./vulnerability-monitoring/vulner
           BackfillGithubAdvisoryPackages1785211200000,
           RepairGithubAdvisoryNormalization1785301200000,
           BackfillVendorProductFieldSources1785310000000,
+          AddCorporateXssWatchRules1785320000000,
         ],
         migrationsRun: true,
         synchronize: false,
