@@ -179,14 +179,26 @@ export function DeliveryHistory(): JSX.Element {
         <>
           <div className={styles.historyTableWrap}>
             <table className={styles.historyTable}>
+              <colgroup>
+                <col className={styles.historyTimeColumn} />
+                <col className={styles.historyRecipientColumn} />
+                <col className={styles.historySubjectColumn} />
+                <col className={styles.historyStatusColumn} />
+                <col className={styles.historyAttemptsColumn} />
+                <col className={styles.historyActionsColumn} />
+              </colgroup>
               <thead>
                 <tr><th>Time</th><th>Recipient</th><th>Subject</th><th>Status</th><th>Attempts</th><th /></tr>
               </thead>
               <tbody>
-                {items.map((item) => (
+                {items.map((item, index) => (
                   <Fragment key={item.id}>
                     <tr
-                      className={`${styles.historyRow} ${selected?.id === item.id ? styles.historyRowActive : ""}`}
+                      className={[
+                        styles.historyRow,
+                        index === items.length - 1 ? styles.historyRowLast : "",
+                        selected?.id === item.id ? styles.historyRowActive : "",
+                      ].join(" ")}
                       onClick={() => void openDetails(item)}
                     >
                       <td>{formatDate(item.createdAt)}</td>

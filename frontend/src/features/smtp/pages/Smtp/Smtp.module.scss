@@ -44,6 +44,7 @@
 
 .historyPanel {
   display: grid;
+  min-width: 0;
   gap: 14px;
   padding: 16px;
   border: 1px solid var(--border);
@@ -108,10 +109,38 @@
   background: var(--danger-hover-bg) !important;
 }
 
-.historyTableWrap { overflow-x: auto; }
-.historyTable { width: 100%; border-collapse: collapse; font-size: 12px; }
+.historyTableWrap {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-gutter: stable;
+}
+
+.historyTable {
+  width: 100%;
+  min-width: 840px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.historyTimeColumn { width: 18%; }
+.historyRecipientColumn { width: 24%; }
+.historySubjectColumn { width: 25%; }
+.historyStatusColumn { width: 12%; }
+.historyAttemptsColumn { width: 8%; }
+.historyActionsColumn { width: 13%; }
+
 .historyTable th,
-.historyTable td { border-bottom: 1px solid var(--border); padding: 10px 8px; text-align: left; white-space: nowrap; }
+.historyTable td {
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 8px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .historyTable th { color: var(--text-muted); font-weight: 600; }
 .historyRow {
   cursor: pointer;
@@ -130,13 +159,20 @@
   background: var(--bg-muted);
 }
 
+.historyRowLast > td {
+  border-bottom: 0;
+}
+
 .subjectCell {
-  max-width: 360px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.historyActions { display: flex; gap: 6px; }
+.historyActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
 .statusBadge { border-radius: 999px; padding: 3px 7px; font-size: 11px; }
 .status_delivered { color: var(--success-color); background: var(--success-bg); }
 .status_deferred,
@@ -149,6 +185,10 @@
   padding: 10px 8px 16px;
   background: transparent;
   white-space: normal;
+}
+
+.detailsRow:last-child > td {
+  border-bottom: 0;
 }
 
 .detailsPanel {
