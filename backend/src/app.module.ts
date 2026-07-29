@@ -19,6 +19,7 @@ import { AddCorporateXssWatchRules1785320000000 } from "./database/migrations/17
 import { AddPublicExploitEnrichment1785330000000 } from "./database/migrations/1785330000000-add-public-exploit-enrichment.js";
 import { RepairKevDatesAndCpeNormalization1785340000000 } from "./database/migrations/1785340000000-repair-kev-dates-and-cpe-normalization.js";
 import { AddRcePotentialScoring1785350000000 } from "./database/migrations/1785350000000-add-rce-potential-scoring.js";
+import { AddVulnerabilityPrimitive1785450000000 } from "./database/migrations/1785450000000-add-vulnerability-primitive.js";
 import { MailEntity } from "./mails/mail.entity.js";
 import { SmtpSettingsEntity } from "./mails/smtp-settings.entity.js";
 import { MailsModule } from "./mails/mails.module.js";
@@ -75,6 +76,7 @@ import { VulnerabilityMonitoringModule } from "./vulnerability-monitoring/vulner
           AddPublicExploitEnrichment1785330000000,
           RepairKevDatesAndCpeNormalization1785340000000,
           AddRcePotentialScoring1785350000000,
+          AddVulnerabilityPrimitive1785450000000,
         ],
         migrationsRun: true,
         synchronize: false,

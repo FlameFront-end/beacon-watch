@@ -18,6 +18,7 @@ Add nullable RCE fields alongside the existing legacy columns:
 - `rcePotentialScore`
 - `rcePotentialLevel`
 - `rcePath`
+- `vulnerabilityPrimitive`
 - `exploitMaturity`
 - `rceScoreConfidence`
 - `rceScoreVersion`
@@ -53,7 +54,9 @@ The calculator returns a structured RCE result with:
 - summary;
 - timestamp.
 
-`rceScoreVersion` is always `"rce-v1"` for calculated records.
+`rceScoreVersion` is always `"rce-v2"` for calculated records. Rows left at
+`rce-v1` were calculated by the superseded model and must not be treated as
+current RCE scoring.
 
 ## Backfill contract
 
