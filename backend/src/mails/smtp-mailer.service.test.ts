@@ -83,6 +83,65 @@ describe("SmtpMailerService", () => {
     assert.equal(options.ignoreTLS, false);
   });
 
+  it("attaches a calendar invite as an iCalendar request", async () => {
+    let sentMessage: Record<string, unknown> | undefined;
+    const originalCreateTransport = nodemailer.createTransport;
+    nodemailer.createTransport = ((options: Record<string, unknown>) => {
+      void options;
+      return {
+        sendMail: async (message: Record<string, unknown>) => {
+          sentMessage = message;
+          return { accepted: ["recipient@example.com"] };
+        },
+        set: () => new Map(),
+      };
+    }) as typeof nodemailer.createTransport;
+
+    try {
+      const smtpSettingsService = {
+        get: async () => ({
+          host: "smtp.example.com",
+          port: 587,
+          secure: false,
+          requireTls: true,
+          from: "sender@example.com",
+          user: "sender@example.com",
+          password: "secret",
+        }),
+      } as Pick<SmtpSettingsService, "get">;
+      const configService = {
+        get: <T>(_key: string, defaultValue?: T) => defaultValue,
+      } as ConfigService;
+      const service = Reflect.construct(SmtpMailerService, [
+        smtpSettingsService,
+        configService,
+      ]) as SmtpMailerService;
+
+      await service.send({
+        to: "recipient@example.com",
+        subject: "Subject",
+        text: "Body",
+        calendarInvite: {
+          title: "Project sync",
+          startsAt: new Date("2026-08-01T10:00:00.000Z"),
+          endsAt: new Date("2026-08-01T10:30:00.000Z"),
+          location: "Online",
+          description: "Discuss delivery status",
+        },
+      });
+    } finally {
+      nodemailer.createTransport = originalCreateTransport;
+    }
+
+    const attachments = sentMessage?.attachments as Array<Record<string, unknown>> | undefined;
+    assert.equal(sentMessage?.icalEvent, undefined);
+    assert.equal(attachments?.[0]?.filename, "invite.ics");
+    assert.equal(attachments?.[0]?.contentType, "text/calendar; method=REQUEST; charset=UTF-8");
+    assert.match(String(attachments?.[0]?.content), /METHOD:REQUEST/);
+    assert.match(String(attachments?.[0]?.content), /SUMMARY:Project sync/);
+    assert.match(String(attachments?.[0]?.content), /DTSTART:20260801T100000Z/);
+  });
+
   it("disables TLS explicitly for an anonymous relay", async () => {
     const options = await captureTransportOptions({
       host: "mail.cvelab.local",

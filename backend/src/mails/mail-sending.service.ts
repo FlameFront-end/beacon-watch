@@ -11,6 +11,15 @@ export type OutgoingMail = {
   readonly text: string;
   readonly html?: string;
   readonly messageId?: string;
+  readonly calendarInvite?: CalendarInvite;
+};
+
+export type CalendarInvite = {
+  readonly title: string;
+  readonly startsAt: Date;
+  readonly endsAt: Date;
+  readonly location?: string;
+  readonly description?: string;
 };
 
 export interface MailSender {
@@ -97,6 +106,7 @@ function parseOutgoingMail(payload: unknown): OutgoingMail {
   const requestedText = readTrimmedString(value.text);
   const html = readTrimmedString(value.html);
   const text = requestedText || (html ? convertMailHtmlToText(html) : "");
+  const calendarInvite = parseCalendarInvite(value.calendarInvite);
 
   if (!to || !isEmailAddress(to)) {
     throw new BadRequestException("A valid recipient email is required");
@@ -110,7 +120,13 @@ function parseOutgoingMail(payload: unknown): OutgoingMail {
     throw new BadRequestException("Message text is required");
   }
 
-  return html ? { to, subject, text, html } : { to, subject, text };
+  return {
+    to,
+    subject,
+    text,
+    ...(html ? { html } : {}),
+    ...(calendarInvite ? { calendarInvite } : {}),
+  };
 }
 
 function readTrimmedString(value: unknown): string {
@@ -126,4 +142,46 @@ function convertMailHtmlToText(html: string): string {
     selectors: [{ selector: "img", format: "skip" }],
     wordwrap: false,
   }).trim();
+}
+
+function parseCalendarInvite(value: unknown): CalendarInvite | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (typeof value !== "object" || Array.isArray(value)) {
+    throw new BadRequestException("Calendar invite must be an object");
+  }
+
+  const invite = value as Record<string, unknown>;
+  const title = readTrimmedString(invite.title);
+  const location = readTrimmedString(invite.location);
+  const description = readTrimmedString(invite.description);
+  const startsAt = readDate(invite.startsAt);
+  const endsAt = readDate(invite.endsAt);
+
+  if (!title) {
+    throw new BadRequestException("Calendar invite title is required");
+  }
+  if (!startsAt || !endsAt) {
+    throw new BadRequestException("Calendar invite start and end dates are required");
+  }
+  if (endsAt.getTime() <= startsAt.getTime()) {
+    throw new BadRequestException("Calendar invite end date must be after the start date");
+  }
+
+  return {
+    title,
+    startsAt,
+    endsAt,
+    ...(location ? { location } : {}),
+    ...(description ? { description } : {}),
+  };
+}
+
+function readDate(value: unknown): Date | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }

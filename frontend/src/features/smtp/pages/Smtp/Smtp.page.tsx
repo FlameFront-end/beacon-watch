@@ -11,6 +11,7 @@ import { FileUp, Send, Settings2 } from "lucide-react";
 import {
   getSmtpSettings,
   sendMail,
+  type CalendarInviteRequest,
   updateSmtpSettings,
   type SmtpSettings,
 } from "@/shared/api/smtp";
@@ -53,6 +54,12 @@ function SendMailPanel(): JSX.Element {
   const [subject, setSubject] = useState("");
   const [text, setText] = useState("");
   const [isHtml, setIsHtml] = useState(false);
+  const [hasCalendarInvite, setHasCalendarInvite] = useState(false);
+  const [calendarTitle, setCalendarTitle] = useState("");
+  const [calendarStartsAt, setCalendarStartsAt] = useState("");
+  const [calendarEndsAt, setCalendarEndsAt] = useState("");
+  const [calendarLocation, setCalendarLocation] = useState("");
+  const [calendarDescription, setCalendarDescription] = useState("");
   const [importedFileName, setImportedFileName] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -88,7 +95,21 @@ function SendMailPanel(): JSX.Element {
     setError(null);
 
     try {
-      await sendMail(isHtml ? { to, subject, html: text } : { to, subject, text });
+      const calendarInvite = hasCalendarInvite
+        ? createCalendarInvite({
+            title: calendarTitle,
+            startsAt: calendarStartsAt,
+            endsAt: calendarEndsAt,
+            location: calendarLocation,
+            description: calendarDescription,
+          })
+        : undefined;
+      await sendMail({
+        to,
+        subject,
+        ...(isHtml ? { html: text } : { text }),
+        ...(calendarInvite ? { calendarInvite } : {}),
+      });
       setStatus(`SMTP server accepted the message for ${to}`);
       window.dispatchEvent(new Event("smtp-delivery-created"));
       setText("");
@@ -171,6 +192,68 @@ function SendMailPanel(): JSX.Element {
           checked={isHtml}
           onChange={(event) => setIsHtml(event.target.checked)}
         />
+        <fieldset className={styles.calendarInvite}>
+          <Checkbox
+            className={styles.calendarToggle}
+            name="hasCalendarInvite"
+            label="Add Outlook calendar invite (.ics)"
+            checked={hasCalendarInvite}
+            onChange={(event) => setHasCalendarInvite(event.target.checked)}
+          />
+          {hasCalendarInvite ? (
+            <div className={styles.calendarFields}>
+              <label>
+                <span>Meeting title</span>
+                <input
+                  name="calendarTitle"
+                  required
+                  value={calendarTitle}
+                  onChange={(event) => setCalendarTitle(event.target.value)}
+                  placeholder={subject || "Meeting title"}
+                />
+              </label>
+              <label>
+                <span>Start</span>
+                <input
+                  name="calendarStartsAt"
+                  type="datetime-local"
+                  required
+                  value={calendarStartsAt}
+                  onChange={(event) => setCalendarStartsAt(event.target.value)}
+                />
+              </label>
+              <label>
+                <span>End</span>
+                <input
+                  name="calendarEndsAt"
+                  type="datetime-local"
+                  required
+                  value={calendarEndsAt}
+                  onChange={(event) => setCalendarEndsAt(event.target.value)}
+                />
+              </label>
+              <label>
+                <span>Location</span>
+                <input
+                  name="calendarLocation"
+                  value={calendarLocation}
+                  onChange={(event) => setCalendarLocation(event.target.value)}
+                  placeholder="Optional"
+                />
+              </label>
+              <label className={styles.messageField}>
+                <span>Calendar description</span>
+                <textarea
+                  name="calendarDescription"
+                  value={calendarDescription}
+                  onChange={(event) => setCalendarDescription(event.target.value)}
+                  placeholder="Optional agenda or joining instructions"
+                  rows={3}
+                />
+              </label>
+            </div>
+          ) : null}
+        </fieldset>
         <div className={styles.actions}>
           <Button type="submit" isLoading={isSending}>
             Send message
@@ -181,6 +264,22 @@ function SendMailPanel(): JSX.Element {
       </form>
     </Panel>
   );
+}
+
+function createCalendarInvite(input: {
+  readonly title: string;
+  readonly startsAt: string;
+  readonly endsAt: string;
+  readonly location: string;
+  readonly description: string;
+}): CalendarInviteRequest {
+  return {
+    title: input.title.trim(),
+    startsAt: new Date(input.startsAt).toISOString(),
+    endsAt: new Date(input.endsAt).toISOString(),
+    ...(input.location.trim() ? { location: input.location.trim() } : {}),
+    ...(input.description.trim() ? { description: input.description.trim() } : {}),
+  };
 }
 
 function SmtpSettingsPanel(): JSX.Element {

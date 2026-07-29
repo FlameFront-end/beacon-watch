@@ -5,7 +5,7 @@ import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import * as socks from "socks";
 
-import type { MailSender, OutgoingMail } from "./mail-sending.service.js";
+import type { CalendarInvite, MailSender, OutgoingMail } from "./mail-sending.service.js";
 import { SmtpSettingsService } from "./smtp-settings.service.js";
 
 @Injectable()
@@ -57,6 +57,20 @@ export class SmtpMailerService implements MailSender {
       text: message.text,
       html: message.html,
       messageId: message.messageId,
+      attachments: message.calendarInvite
+        ? [
+            {
+              filename: "invite.ics",
+              content: buildCalendarInvite({
+                invite: message.calendarInvite,
+                from,
+                to: message.to,
+                uid: message.messageId ?? `${Date.now()}@beaconwatch.local`,
+              }),
+              contentType: "text/calendar; method=REQUEST; charset=UTF-8",
+            },
+          ]
+        : undefined,
     });
 
     this.logger.log(`SMTP message accepted for ${message.to}`);
@@ -104,4 +118,65 @@ function parseTimeout(value: unknown): number {
   return Number.isSafeInteger(timeout) && timeout > 0
     ? timeout
     : DEFAULT_SMTP_TIMEOUT_MS;
+}
+
+function buildCalendarInvite(input: {
+  readonly invite: CalendarInvite;
+  readonly from: string;
+  readonly to: string;
+  readonly uid: string;
+}): string {
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//BeaconWatch//SMTP Calendar Invite//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:REQUEST",
+    "BEGIN:VEVENT",
+    `UID:${escapeCalendarText(input.uid.replace(/^<|>$/g, ""))}`,
+    `DTSTAMP:${formatCalendarDate(new Date())}`,
+    `DTSTART:${formatCalendarDate(input.invite.startsAt)}`,
+    `DTEND:${formatCalendarDate(input.invite.endsAt)}`,
+    `SUMMARY:${escapeCalendarText(input.invite.title)}`,
+    `DESCRIPTION:${escapeCalendarText(input.invite.description ?? "")}`,
+    `LOCATION:${escapeCalendarText(input.invite.location ?? "")}`,
+    `ORGANIZER:MAILTO:${input.from}`,
+    `ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:MAILTO:${input.to}`,
+    "STATUS:CONFIRMED",
+    "SEQUENCE:0",
+    "TRANSP:OPAQUE",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].map(foldCalendarLine).join("\r\n");
+}
+
+function formatCalendarDate(date: Date): string {
+  return date.toISOString()
+    .replaceAll("-", "")
+    .replaceAll(":", "")
+    .replace(/\.\d{3}Z$/, "Z");
+}
+
+function escapeCalendarText(value: string): string {
+  return value
+    .replaceAll("\\", "\\\\")
+    .replaceAll(";", "\\;")
+    .replaceAll(",", "\\,")
+    .replace(/\r?\n/g, "\\n");
+}
+
+function foldCalendarLine(line: string): string {
+  const limit = 75;
+  if (line.length <= limit) {
+    return line;
+  }
+
+  const parts: string[] = [];
+  let remainingLine = line;
+  while (remainingLine.length > limit) {
+    parts.push(remainingLine.slice(0, limit));
+    remainingLine = ` ${remainingLine.slice(limit)}`;
+  }
+  parts.push(remainingLine);
+  return parts.join("\r\n");
 }

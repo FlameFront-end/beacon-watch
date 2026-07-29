@@ -49,6 +49,55 @@ describe("MailSendingService", () => {
     ]);
   });
 
+  it("passes a validated calendar invite to the mail sender", async () => {
+    const sender = createMailSender();
+    const service = new MailSendingService(sender);
+
+    await service.send({
+      to: "recipient@example.com",
+      subject: "Meeting request",
+      text: "Please join the meeting.",
+      calendarInvite: {
+        title: "Project sync",
+        startsAt: "2026-08-01T10:00:00.000Z",
+        endsAt: "2026-08-01T10:30:00.000Z",
+        location: "Online",
+        description: "Discuss delivery status",
+      },
+    });
+
+    assert.equal(sender.sent.length, 1);
+    assert.deepEqual(sender.sent[0]?.calendarInvite, {
+      title: "Project sync",
+      startsAt: new Date("2026-08-01T10:00:00.000Z"),
+      endsAt: new Date("2026-08-01T10:30:00.000Z"),
+      location: "Online",
+      description: "Discuss delivery status",
+    });
+  });
+
+  it("rejects calendar invites that end before they start", async () => {
+    const sender = createMailSender();
+    const service = new MailSendingService(sender);
+
+    await assert.rejects(
+      () =>
+        service.send({
+          to: "recipient@example.com",
+          subject: "Meeting request",
+          text: "Please join the meeting.",
+          calendarInvite: {
+            title: "Project sync",
+            startsAt: "2026-08-01T10:30:00.000Z",
+            endsAt: "2026-08-01T10:00:00.000Z",
+          },
+        }),
+      BadRequestException,
+    );
+
+    assert.deepEqual(sender.sent, []);
+  });
+
   it("passes raw executable HTML to the mail sender unchanged", async () => {
     const sender = createMailSender();
     const service = new MailSendingService(sender);
@@ -160,6 +209,13 @@ function createMailSender(error?: Error): MailSender & {
     subject: string;
     text: string;
     html?: string;
+    calendarInvite?: {
+      readonly title: string;
+      readonly startsAt: Date;
+      readonly endsAt: Date;
+      readonly location?: string;
+      readonly description?: string;
+    };
   }>;
 } {
   const sent: Array<{
@@ -167,6 +223,13 @@ function createMailSender(error?: Error): MailSender & {
     subject: string;
     text: string;
     html?: string;
+    calendarInvite?: {
+      readonly title: string;
+      readonly startsAt: Date;
+      readonly endsAt: Date;
+      readonly location?: string;
+      readonly description?: string;
+    };
   }> = [];
 
   return {

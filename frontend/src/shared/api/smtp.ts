@@ -5,6 +5,15 @@ export type SendMailRequest = {
   readonly subject: string;
   readonly text?: string;
   readonly html?: string;
+  readonly calendarInvite?: CalendarInviteRequest;
+};
+
+export type CalendarInviteRequest = {
+  readonly title: string;
+  readonly startsAt: string;
+  readonly endsAt: string;
+  readonly location?: string;
+  readonly description?: string;
 };
 
 export type DeliveryStatus =
