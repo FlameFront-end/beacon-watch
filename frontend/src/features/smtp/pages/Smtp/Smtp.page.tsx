@@ -149,38 +149,43 @@ function SendMailPanel(): JSX.Element {
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit}>
-        <label>
-          <span>Recipient</span>
-          <input
-            name="recipient"
-            type="email"
-            required
-            value={draft.to}
-            onChange={(event) => updateDraft({ to: event.target.value })}
-            placeholder="recipient@example.com"
-          />
-        </label>
-        <label>
-          <span>Subject</span>
-          <input
-            name="subject"
-            required
-            value={draft.subject}
-            onChange={(event) => updateDraft({ subject: event.target.value })}
-            placeholder="Subject"
-          />
-        </label>
-        <label className={styles.messageField}>
-          <span>Message</span>
-          <textarea
-            name="message"
-            required
-            value={draft.text}
-            onChange={(event) => updateDraft({ text: event.target.value })}
-            placeholder={draft.isHtml ? "<p>Write an HTML message</p>" : "Write a message"}
-            rows={8}
-          />
-        </label>
+        <fieldset className={styles.formSection}>
+          <legend>Message envelope</legend>
+          <div className={styles.formSectionGrid}>
+            <label>
+              <span>Recipient</span>
+              <input
+                name="recipient"
+                type="email"
+                required
+                value={draft.to}
+                onChange={(event) => updateDraft({ to: event.target.value })}
+                placeholder="recipient@example.com"
+              />
+            </label>
+            <label>
+              <span>Subject</span>
+              <input
+                name="subject"
+                required
+                value={draft.subject}
+                onChange={(event) => updateDraft({ subject: event.target.value })}
+                placeholder="Subject"
+              />
+            </label>
+            <label className={styles.messageField}>
+              <span>Message</span>
+              <textarea
+                name="message"
+                required
+                value={draft.text}
+                onChange={(event) => updateDraft({ text: event.target.value })}
+                placeholder={draft.isHtml ? "<p>Write an HTML message</p>" : "Write a message"}
+                rows={8}
+              />
+            </label>
+          </div>
+        </fieldset>
         <div className={styles.importRow}>
           <input
             ref={htmlFileInputRef}
@@ -210,7 +215,7 @@ function SendMailPanel(): JSX.Element {
           checked={draft.isHtml}
           onChange={(event) => updateDraft({ isHtml: event.target.checked })}
         />
-        <fieldset className={styles.calendarInvite}>
+        <fieldset className={`${styles.calendarInvite} ${draft.hasCalendarInvite ? styles.calendarInviteActive : ""}`}>
           <Checkbox
             className={styles.calendarToggle}
             name="hasCalendarInvite"
@@ -218,6 +223,9 @@ function SendMailPanel(): JSX.Element {
             checked={draft.hasCalendarInvite}
             onChange={(event) => updateDraft({ hasCalendarInvite: event.target.checked })}
           />
+          <p className={styles.calendarHint}>
+            Attaches a standard iCalendar request so Outlook and other clients can create a calendar event.
+          </p>
           {draft.hasCalendarInvite ? (
             <div className={styles.calendarFields}>
               <label>
@@ -400,122 +408,137 @@ function SmtpSettingsPanel(): JSX.Element {
       {isLoading ? <p className={styles.settingsHint}>Loading settings...</p> : null}
       {!isLoading ? (
         <form className={styles.form} onSubmit={handleSubmit}>
-          <label>
-            <span>SMTP host</span>
-            <input
-              name="smtpHost"
-              required
-              value={host}
-              onChange={(event) => setHost(event.target.value)}
-            />
-          </label>
-          <label>
-            <span>Port</span>
-            <input
-              name="smtpPort"
-              required
-              type="number"
-              min="1"
-              max="65535"
-              value={port}
-              onChange={(event) => setPort(event.target.value)}
-            />
-          </label>
-          <label>
-            <span>From</span>
-            <input
-              name="smtpFrom"
-              required
-              type="email"
-              value={from}
-              onChange={(event) => setFrom(event.target.value)}
-            />
-          </label>
-          <label>
-            <span>SMTP user</span>
-            <input
-              name="smtpUser"
-              value={user}
-              onChange={(event) => {
-                const nextUser = event.target.value;
-                setUser(nextUser);
-                if (!nextUser) {
-                  setPassword("");
-                }
-              }}
-            />
-          </label>
-          <label>
-            <span>
-              New password{" "}
-              {canReuseStoredPassword ? "(leave blank to keep)" : user ? "(required)" : ""}
-            </span>
-            <input
-              name="smtpPassword"
-              type="password"
-              value={password}
-              required={isPasswordRequired}
-              disabled={!user}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
-          <div className={styles.selectField}>
-            <span>Connection security</span>
-            <Select
-              name="smtpTlsMode"
-              value={tlsMode}
-              options={TLS_MODE_OPTIONS}
-              ariaLabel="Connection security"
-              onChange={setTlsMode}
-            />
-          </div>
-          <label>
-            <span>SOCKS5 proxy host</span>
-            <input
-              name="proxyHost"
-              value={proxyHost}
-              onChange={(event) => setProxyHost(event.target.value)}
-              placeholder="Optional"
-            />
-          </label>
-          <label>
-            <span>SOCKS5 proxy port</span>
-            <input
-              name="proxyPort"
-              type="number"
-              min="1"
-              max="65535"
-              value={proxyPort}
-              onChange={(event) => setProxyPort(event.target.value)}
-            />
-          </label>
-          <label>
-            <span>SOCKS5 proxy user</span>
-            <input
-              name="proxyUser"
-              value={proxyUser}
-              onChange={(event) => {
-                const nextUser = event.target.value;
-                setProxyUser(nextUser);
-                if (!nextUser) {
-                  setProxyPassword("");
-                }
-              }}
-            />
-          </label>
-          <label>
-            <span>
-              SOCKS5 proxy password {canReuseProxyPassword ? "(leave blank to keep)" : proxyUser ? "(required)" : ""}
-            </span>
-            <input
-              name="proxyPassword"
-              type="password"
-              value={proxyPassword}
-              required={isProxyPasswordRequired}
-              disabled={!proxyUser}
-              onChange={(event) => setProxyPassword(event.target.value)}
-            />
-          </label>
+          <fieldset className={styles.formSection}>
+            <legend>Connection</legend>
+            <div className={styles.formSectionGrid}>
+              <label>
+                <span>SMTP host</span>
+                <input
+                  name="smtpHost"
+                  required
+                  value={host}
+                  onChange={(event) => setHost(event.target.value)}
+                />
+              </label>
+              <label>
+                <span>Port</span>
+                <input
+                  name="smtpPort"
+                  required
+                  type="number"
+                  min="1"
+                  max="65535"
+                  value={port}
+                  onChange={(event) => setPort(event.target.value)}
+                />
+              </label>
+              <div className={styles.selectField}>
+                <span>Connection security</span>
+                <Select
+                  name="smtpTlsMode"
+                  value={tlsMode}
+                  options={TLS_MODE_OPTIONS}
+                  ariaLabel="Connection security"
+                  onChange={setTlsMode}
+                />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset className={styles.formSection}>
+            <legend>Sender authentication</legend>
+            <div className={styles.formSectionGrid}>
+              <label>
+                <span>From</span>
+                <input
+                  name="smtpFrom"
+                  required
+                  type="email"
+                  value={from}
+                  onChange={(event) => setFrom(event.target.value)}
+                />
+              </label>
+              <label>
+                <span>SMTP user</span>
+                <input
+                  name="smtpUser"
+                  value={user}
+                  onChange={(event) => {
+                    const nextUser = event.target.value;
+                    setUser(nextUser);
+                    if (!nextUser) {
+                      setPassword("");
+                    }
+                  }}
+                />
+              </label>
+              <label>
+                <span>
+                  New password{" "}
+                  {canReuseStoredPassword ? "(leave blank to keep)" : user ? "(required)" : ""}
+                </span>
+                <input
+                  name="smtpPassword"
+                  type="password"
+                  value={password}
+                  required={isPasswordRequired}
+                  disabled={!user}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </label>
+            </div>
+          </fieldset>
+          <fieldset className={styles.formSection}>
+            <legend>SOCKS5 proxy</legend>
+            <div className={styles.formSectionGrid}>
+              <label>
+                <span>SOCKS5 proxy host</span>
+                <input
+                  name="proxyHost"
+                  value={proxyHost}
+                  onChange={(event) => setProxyHost(event.target.value)}
+                  placeholder="Optional"
+                />
+              </label>
+              <label>
+                <span>SOCKS5 proxy port</span>
+                <input
+                  name="proxyPort"
+                  type="number"
+                  min="1"
+                  max="65535"
+                  value={proxyPort}
+                  onChange={(event) => setProxyPort(event.target.value)}
+                />
+              </label>
+              <label>
+                <span>SOCKS5 proxy user</span>
+                <input
+                  name="proxyUser"
+                  value={proxyUser}
+                  onChange={(event) => {
+                    const nextUser = event.target.value;
+                    setProxyUser(nextUser);
+                    if (!nextUser) {
+                      setProxyPassword("");
+                    }
+                  }}
+                />
+              </label>
+              <label>
+                <span>
+                  SOCKS5 proxy password {canReuseProxyPassword ? "(leave blank to keep)" : proxyUser ? "(required)" : ""}
+                </span>
+                <input
+                  name="proxyPassword"
+                  type="password"
+                  value={proxyPassword}
+                  required={isProxyPasswordRequired}
+                  disabled={!proxyUser}
+                  onChange={(event) => setProxyPassword(event.target.value)}
+                />
+              </label>
+            </div>
+          </fieldset>
           <p className={styles.settingsHint}>
             Authentication requires STARTTLS or implicit TLS. Clearing the SMTP
             user also removes the stored password. SOCKS5 is disabled when its host is empty.
