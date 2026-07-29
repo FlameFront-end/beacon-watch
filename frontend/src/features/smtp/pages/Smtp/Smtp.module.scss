@@ -39,9 +39,7 @@
   gap: 16px;
   padding: 18px;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--text-primary) 2%, transparent), transparent 120px),
-    var(--bg-surface-alt);
+  background: var(--bg-surface-alt);
 }
 
 .historyPanel {
@@ -74,7 +72,7 @@
 .pagination button:hover:not(:disabled),
 .historyToolbar button:hover:not(:disabled) {
   border-color: var(--border-solid);
-  background: color-mix(in srgb, var(--text-primary) 7%, var(--bg-surface));
+  background: var(--bg-muted);
 }
 
 .historyActions button:active,
@@ -117,20 +115,19 @@
 .historyTable th { color: var(--text-muted); font-weight: 600; }
 .historyRow {
   cursor: pointer;
-  transition: background 160ms ease, box-shadow 160ms ease;
+  transition: background 160ms ease;
 }
 
 .historyRow:hover {
-  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+  background: var(--bg-subtle);
 }
 
 .historyRowActive {
-  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
-  box-shadow: inset 3px 0 0 var(--border-solid);
+  background: var(--bg-muted);
 }
 
 .historyRowActive:hover {
-  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  background: var(--bg-muted);
 }
 
 .subjectCell {
@@ -141,12 +138,12 @@
 
 .historyActions { display: flex; gap: 6px; }
 .statusBadge { border-radius: 999px; padding: 3px 7px; font-size: 11px; }
-.status_delivered { color: var(--success-color); background: color-mix(in srgb, var(--success-color) 15%, transparent); }
+.status_delivered { color: var(--success-color); background: var(--success-bg); }
 .status_deferred,
 .status_queued,
-.status_retrying { color: var(--warning-color); background: color-mix(in srgb, var(--warning-color) 15%, transparent); }
+.status_retrying { color: var(--warning-color); background: var(--warning-bg); }
 .status_bounced,
-.status_failed { color: var(--danger-color); background: color-mix(in srgb, var(--danger-color) 15%, transparent); }
+.status_failed { color: var(--danger-color); background: var(--danger-bg); }
 
 .detailsRow td {
   padding: 10px 8px 16px;
@@ -328,7 +325,7 @@
   width: 100%;
   border: 1px solid var(--border-soft);
   border-radius: 6px;
-  background: color-mix(in srgb, var(--bg-subtle) 78%, var(--bg-surface));
+  background: var(--bg-surface);
   color: var(--text-primary);
   font: inherit;
   font-size: 13px;
@@ -345,7 +342,7 @@
 
 .form input::placeholder,
 .form textarea::placeholder {
-  color: color-mix(in srgb, var(--text-muted) 72%, transparent);
+  color: var(--text-muted);
 }
 
 .form textarea {
@@ -391,9 +388,7 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 14px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--text-primary) 2%, transparent), transparent),
-    var(--bg-subtle);
+  background: var(--bg-subtle);
 }
 
 .formSection legend {
@@ -418,7 +413,7 @@
   border: 1px dashed var(--border);
   border-radius: 8px;
   padding: 10px;
-  background: color-mix(in srgb, var(--bg-subtle) 72%, transparent);
+  background: var(--bg-subtle);
 }
 
 .htmlFileInput {
@@ -446,38 +441,21 @@
 }
 
 .calendarInvite {
-  position: relative;
   display: grid;
   gap: 8px;
   margin: 0;
   border: 1px solid var(--border);
   border-radius: 9px;
   padding: 13px 14px 14px;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--success-color) 10%, transparent), transparent 150px),
-    var(--bg-subtle);
+  background: var(--bg-subtle);
   transition:
     border-color 0.15s ease,
-    background 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.calendarInvite::before {
-  position: absolute;
-  inset: 12px auto 12px 0;
-  width: 3px;
-  border-radius: 999px;
-  background: var(--border-solid);
-  content: "";
+    background 0.15s ease;
 }
 
 .calendarInviteActive {
-  border-color: color-mix(in srgb, var(--success-color) 34%, var(--border));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--success-color) 12%, transparent);
-}
-
-.calendarInviteActive::before {
-  background: var(--success-color);
+  border-color: var(--border-solid);
+  background: var(--bg-muted);
 }
 
 .calendarToggle {
@@ -506,7 +484,7 @@
   border: 1px solid var(--border);
   border-radius: 7px;
   padding: 10px 11px;
-  background: color-mix(in srgb, var(--warning-color) 7%, var(--bg-subtle));
+  background: var(--bg-subtle);
   color: var(--text-muted);
   font-size: 12px;
   line-height: 1.45;
