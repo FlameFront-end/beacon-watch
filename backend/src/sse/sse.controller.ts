@@ -38,3 +38,19 @@ export class VulnerabilityMonitoringSseController {
     );
   }
 }
+
+@Controller("api/smtp/deliveries/events")
+export class DeliverySseController {
+  constructor(@Inject(SseService) private readonly sseService: SseService) {}
+
+  @Sse()
+  @UseGuards(SessionAuthGuard)
+  stream(): Observable<MessageEvent> {
+    return this.sseService.deliveryEvents$.pipe(
+      map(({ event, data }): MessageEvent => ({
+        type: event,
+        data,
+      })),
+    );
+  }
+}

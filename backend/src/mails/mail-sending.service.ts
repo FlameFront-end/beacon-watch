@@ -1,11 +1,16 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, Optional } from "@nestjs/common";
 import { convert } from "html-to-text";
+import { randomUUID } from "node:crypto";
+
+import { DeliveryHistoryService } from "./delivery-history.service.js";
+import { SmtpSettingsService } from "./smtp-settings.service.js";
 
 export type OutgoingMail = {
   readonly to: string;
   readonly subject: string;
   readonly text: string;
   readonly html?: string;
+  readonly messageId?: string;
 };
 
 export interface MailSender {
@@ -16,12 +21,69 @@ export const MAIL_SENDER = Symbol("MAIL_SENDER");
 
 @Injectable()
 export class MailSendingService {
-  constructor(@Inject(MAIL_SENDER) private readonly mailSender: MailSender) {}
+  constructor(
+    @Inject(MAIL_SENDER) private readonly mailSender: MailSender,
+    @Optional() private readonly deliveryHistoryService?: DeliveryHistoryService,
+    @Optional() private readonly smtpSettingsService?: SmtpSettingsService,
+  ) {}
 
   async send(payload: unknown): Promise<void> {
     const message = parseOutgoingMail(payload);
-    await this.mailSender.send(message);
+    if (!this.deliveryHistoryService || !this.smtpSettingsService) {
+      await this.mailSender.send(message);
+      return;
+    }
+    const settings = await this.smtpSettingsService.get();
+    const messageId = `<${randomUUID()}@beaconwatch.local>`;
+    const delivery = await this.deliveryHistoryService.create({
+      messageId,
+      sender: settings.from,
+      recipient: message.to,
+      subject: message.subject,
+      preview: message.text.slice(0, 240),
+      messageSize: Buffer.byteLength(message.text, "utf8"),
+    });
+
+    try {
+      await this.deliveryHistoryService.recordEvent({
+        deliveryId: delivery.id,
+        eventId: `${delivery.id}:submitting`,
+        source: "beaconwatch",
+        status: "submitting",
+      });
+      await this.mailSender.send({ ...message, messageId });
+      await this.deliveryHistoryService.recordEvent({
+        deliveryId: delivery.id,
+        eventId: `${delivery.id}:accepted`,
+        source: "smtp",
+        status: "accepted",
+      });
+    } catch (error: unknown) {
+      await this.deliveryHistoryService.recordEvent({
+        deliveryId: delivery.id,
+        eventId: `${delivery.id}:failed`,
+        source: "beaconwatch",
+        status: "failed",
+        errorCategory: classifySendError(error),
+        message: error instanceof Error ? error.message.slice(0, 500) : "SMTP submission failed",
+      });
+      throw error;
+    }
   }
+}
+
+function classifySendError(error: unknown): string {
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+  if (message.includes("auth")) {
+    return "authentication_failed";
+  }
+  if (message.includes("timeout")) {
+    return "network_timeout";
+  }
+  if (message.includes("tls")) {
+    return "tls_error";
+  }
+  return "queue_error";
 }
 
 function parseOutgoingMail(payload: unknown): OutgoingMail {

@@ -2,6 +2,15 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { AuthModule } from "../auth/auth.module.js";
+import { SseModule } from "../sse/sse.module.js";
+import { DeliveryEntity } from "./delivery.entity.js";
+import { DeliveryEventEntity } from "./delivery-event.entity.js";
+import {
+  DeliveryAgentEventsController,
+  DeliveryHistoryController,
+} from "./delivery-history.controller.js";
+import { DeliveryHistoryService } from "./delivery-history.service.js";
+import { DeliveryRetentionService } from "./delivery-retention.service.js";
 import { MailEntity } from "./mail.entity.js";
 import {
   MailsIngestController,
@@ -19,18 +28,31 @@ import { SmtpSettingsService } from "./smtp-settings.service.js";
 import { SmtpSettingsEntity } from "./smtp-settings.entity.js";
 
 @Module({
-  imports: [AuthModule, TypeOrmModule.forFeature([MailEntity, SmtpSettingsEntity])],
+  imports: [
+    AuthModule,
+    SseModule,
+    TypeOrmModule.forFeature([
+      MailEntity,
+      SmtpSettingsEntity,
+      DeliveryEntity,
+      DeliveryEventEntity,
+    ]),
+  ],
   controllers: [
     MailsIngestController,
     StoredMailsController,
     SmtpMailController,
     SmtpSettingsController,
+    DeliveryHistoryController,
+    DeliveryAgentEventsController,
   ],
   providers: [
     MailsService,
     MailSendingService,
     SmtpMailerService,
     SmtpSettingsService,
+    DeliveryHistoryService,
+    DeliveryRetentionService,
     { provide: MAIL_SENDER, useExisting: SmtpMailerService },
   ],
 })

@@ -20,13 +20,20 @@ export type VulnerabilityMonitoringEvent = {
   data: Record<string, unknown>;
 };
 
+export type DeliveryEvent = {
+  event: "smtp_delivery";
+  data: Record<string, unknown>;
+};
+
 @Injectable()
 export class SseService {
   private readonly beaconStream = new Subject<BeaconEvent>();
   private readonly vulnerabilityMonitoringStream = new Subject<VulnerabilityMonitoringEvent>();
+  private readonly deliveryStream = new Subject<DeliveryEvent>();
 
   readonly events$ = this.beaconStream.asObservable();
   readonly vulnerabilityMonitoringEvents$ = this.vulnerabilityMonitoringStream.asObservable();
+  readonly deliveryEvents$ = this.deliveryStream.asObservable();
 
   eventsFor(serviceKey: string) {
     return this.events$.pipe(
@@ -40,5 +47,9 @@ export class SseService {
 
   emitVulnerabilityMonitoringEvent(event: VulnerabilityMonitoringEvent): void {
     this.vulnerabilityMonitoringStream.next(event);
+  }
+
+  emitDeliveryEvent(data: Record<string, unknown>): void {
+    this.deliveryStream.next({ event: "smtp_delivery", data });
   }
 }

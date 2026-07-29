@@ -56,6 +56,7 @@ export class SmtpMailerService implements MailSender {
       subject: message.subject,
       text: message.text,
       html: message.html,
+      messageId: message.messageId,
     });
 
     this.logger.log(`SMTP message accepted for ${message.to}`);

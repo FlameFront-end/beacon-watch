@@ -40,6 +40,48 @@
   padding: 16px;
 }
 
+.historyPanel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  box-shadow: var(--surface-shadow);
+}
+
+.historyPanel select,
+.historyActions button,
+.detailsPanel button {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  padding: 7px 9px;
+  font: inherit;
+  font-size: 12px;
+}
+
+.historyTableWrap { overflow-x: auto; }
+.historyTable { width: 100%; border-collapse: collapse; font-size: 12px; }
+.historyTable th,
+.historyTable td { border-bottom: 1px solid var(--border); padding: 10px 8px; text-align: left; white-space: nowrap; }
+.historyTable th { color: var(--text-muted); font-weight: 600; }
+.historyActions { display: flex; gap: 6px; }
+.statusBadge { border-radius: 999px; padding: 3px 7px; font-size: 11px; }
+.status_delivered { color: var(--success-color); background: color-mix(in srgb, var(--success-color) 15%, transparent); }
+.status_deferred,
+.status_queued,
+.status_retrying { color: var(--warning-color); background: color-mix(in srgb, var(--warning-color) 15%, transparent); }
+.status_bounced,
+.status_failed { color: var(--danger-color); background: color-mix(in srgb, var(--danger-color) 15%, transparent); }
+.detailsPanel { display: grid; gap: 10px; border-top: 1px solid var(--border); padding-top: 14px; }
+.detailsPanel h3 { margin: 0; color: var(--text-heading); }
+.timeline { display: grid; gap: 10px; margin: 0; padding-left: 20px; }
+.timeline li { padding-left: 4px; }
+.timeline span,
+.timeline p { display: block; margin: 3px 0 0; color: var(--text-muted); font-size: 12px; }
+
 .panelHeading {
   display: flex;
   align-items: flex-start;

@@ -21,6 +21,9 @@ import { RepairKevDatesAndCpeNormalization1785340000000 } from "./database/migra
 import { AddRcePotentialScoring1785350000000 } from "./database/migrations/1785350000000-add-rce-potential-scoring.js";
 import { AddVulnerabilityPrimitive1785450000000 } from "./database/migrations/1785450000000-add-vulnerability-primitive.js";
 import { AlterRceScoreConfidenceToReal1785460000000 } from "./database/migrations/1785460000000-alter-rce-score-confidence-to-real.js";
+import { AddSmtpDeliveryHistory1785500000000 } from "./database/migrations/1785500000000-add-smtp-delivery-history.js";
+import { DeliveryEntity } from "./mails/delivery.entity.js";
+import { DeliveryEventEntity } from "./mails/delivery-event.entity.js";
 import { MailEntity } from "./mails/mail.entity.js";
 import { SmtpSettingsEntity } from "./mails/smtp-settings.entity.js";
 import { MailsModule } from "./mails/mails.module.js";
@@ -54,6 +57,8 @@ import { VulnerabilityMonitoringModule } from "./vulnerability-monitoring/vulner
         entities: [
           BeaconEntity,
           MailEntity,
+          DeliveryEntity,
+          DeliveryEventEntity,
           SmtpSettingsEntity,
           VulnerabilityEntity,
           VulnerabilitySourceRecordEntity,
@@ -79,6 +84,7 @@ import { VulnerabilityMonitoringModule } from "./vulnerability-monitoring/vulner
           AddRcePotentialScoring1785350000000,
           AddVulnerabilityPrimitive1785450000000,
           AlterRceScoreConfidenceToReal1785460000000,
+          AddSmtpDeliveryHistory1785500000000,
         ],
         migrationsRun: true,
         synchronize: false,

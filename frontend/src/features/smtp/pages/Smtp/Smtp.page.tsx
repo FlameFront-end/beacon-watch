@@ -16,6 +16,7 @@ import {
 } from "@/shared/api/smtp";
 import { Button, Checkbox, Panel, Select } from "@/shared/kit";
 import { readHtmlFile } from "@/features/mails/lib/read-html-file";
+import { DeliveryHistory } from "@/features/smtp/components/DeliveryHistory";
 
 import styles from "./Smtp.module.scss";
 
@@ -41,6 +42,7 @@ export function SmtpPage(): JSX.Element {
         <SendMailPanel />
         <SmtpSettingsPanel />
       </div>
+      <DeliveryHistory />
     </div>
   );
 }
@@ -88,6 +90,7 @@ function SendMailPanel(): JSX.Element {
     try {
       await sendMail(isHtml ? { to, subject, html: text } : { to, subject, text });
       setStatus(`SMTP server accepted the message for ${to}`);
+      window.dispatchEvent(new Event("smtp-delivery-created"));
       setText("");
       setImportedFileName(null);
     } catch (sendError: unknown) {

@@ -1,0 +1,19 @@
+[Unit]
+Description=Beacon Watch Mailcow delivery event agent
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/beacon-watch-mailcow-agent
+EnvironmentFile=/etc/beacon-watch-mailcow-agent.env
+ExecStart=/usr/bin/python3 /opt/beacon-watch-mailcow-agent/mailcow_delivery_agent.py
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/beacon-watch-mailcow-agent
+
+[Install]
+WantedBy=multi-user.target
