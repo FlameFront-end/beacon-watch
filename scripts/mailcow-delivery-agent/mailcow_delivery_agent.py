@@ -13,7 +13,7 @@ from typing import Any
 
 
 QUEUE_ID_PATTERN = re.compile(r"\b([A-F0-9]{5,16}):")
-MESSAGE_ID_PATTERN = re.compile(r"message-id=<([^>]+)>")
+MESSAGE_ID_PATTERN = re.compile(r"message-id=(<[^>]+>)")
 RECIPIENT_PATTERN = re.compile(r"to=<([^>]+)>")
 RELAY_PATTERN = re.compile(r"relay=([^, ]+)")
 SMTP_CODE_PATTERN = re.compile(r"dsn=\d\.(\d)\.(\d)")
