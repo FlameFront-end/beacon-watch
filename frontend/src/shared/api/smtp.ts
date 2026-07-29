@@ -110,6 +110,14 @@ export async function cancelDelivery(id: string): Promise<void> {
   await http.post(`/api/smtp/deliveries/${id}/cancel`);
 }
 
+export async function deleteDelivery(id: string): Promise<void> {
+  await http.delete(`/api/smtp/deliveries/${id}`);
+}
+
+export async function deleteAllDeliveries(): Promise<void> {
+  await http.delete("/api/smtp/deliveries");
+}
+
 export async function getSmtpSettings(): Promise<SmtpSettings> {
   const response = await http.get<SmtpSettings>("/api/smtp/settings");
   return response.data;

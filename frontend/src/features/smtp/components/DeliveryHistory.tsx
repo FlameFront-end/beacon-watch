@@ -2,6 +2,8 @@ import { Fragment, useEffect, useState, type JSX } from "react";
 
 import {
   cancelDelivery,
+  deleteAllDeliveries,
+  deleteDelivery,
   getDeliveries,
   getDeliveryDetails,
   type DeliveryEvent,
@@ -9,6 +11,7 @@ import {
   type DeliveryStatus,
 } from "@/shared/api/smtp";
 import { API_ORIGIN } from "@/shared/config/api";
+import { Select, type SelectOption } from "@/shared/kit";
 
 import styles from "../pages/Smtp/Smtp.module.scss";
 
@@ -28,12 +31,23 @@ const STATUS_LABELS: Record<DeliveryStatus, string> = {
 };
 
 const PAGE_SIZE = 8;
+type StatusFilter = DeliveryStatus | "";
+
+const STATUS_OPTIONS: readonly SelectOption<StatusFilter>[] = [
+  { value: "", label: "All statuses" },
+  { value: "accepted", label: "Accepted" },
+  { value: "queued", label: "Queued" },
+  { value: "deferred", label: "Deferred" },
+  { value: "delivered", label: "Delivered" },
+  { value: "bounced", label: "Bounced" },
+  { value: "failed", label: "Failed" },
+];
 
 export function DeliveryHistory(): JSX.Element {
   const [items, setItems] = useState<DeliveryRecord[]>([]);
   const [selected, setSelected] = useState<DeliveryRecord | null>(null);
   const [events, setEvents] = useState<DeliveryEvent[]>([]);
-  const [status, setStatus] = useState<DeliveryStatus | "">("");
+  const [status, setStatus] = useState<StatusFilter>("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -95,7 +109,44 @@ export function DeliveryHistory(): JSX.Element {
     setSelected(null);
   }
 
-  function selectStatus(nextStatus: DeliveryStatus | ""): void {
+  async function removeDelivery(item: DeliveryRecord): Promise<void> {
+    const wasSelected = selected?.id === item.id;
+
+    try {
+      await deleteDelivery(item.id);
+      if (wasSelected) {
+        setSelected(null);
+        setEvents([]);
+      }
+      if (items.length === 1 && page > 1) {
+        setPage((current) => current - 1);
+        return;
+      }
+      await load();
+    } catch {
+      setError("Failed to delete delivery");
+    }
+  }
+
+  async function clearHistory(): Promise<void> {
+    if (!window.confirm("Delete all SMTP delivery history records and events?")) {
+      return;
+    }
+
+    try {
+      await deleteAllDeliveries();
+      setItems([]);
+      setTotal(0);
+      setSelected(null);
+      setEvents([]);
+      setPage(1);
+      setError(null);
+    } catch {
+      setError("Failed to clear delivery history");
+    }
+  }
+
+  function selectStatus(nextStatus: StatusFilter): void {
     setStatus(nextStatus);
     setPage(1);
     setSelected(null);
@@ -109,15 +160,18 @@ export function DeliveryHistory(): JSX.Element {
           <h2>Delivery history</h2>
           <p>Track SMTP acceptance, Mailcow queue state, retries, and delivery errors.</p>
         </div>
-        <select value={status} onChange={(event) => selectStatus(event.target.value as DeliveryStatus | "")}>
-          <option value="">All statuses</option>
-          <option value="accepted">Accepted</option>
-          <option value="queued">Queued</option>
-          <option value="deferred">Deferred</option>
-          <option value="delivered">Delivered</option>
-          <option value="bounced">Bounced</option>
-          <option value="failed">Failed</option>
-        </select>
+        <div className={styles.historyToolbar}>
+          <button type="button" className={styles.dangerButton} disabled={total === 0} onClick={() => void clearHistory()}>
+            Clear history
+          </button>
+          <Select
+            value={status}
+            options={STATUS_OPTIONS}
+            ariaLabel="Delivery status"
+            onChange={selectStatus}
+            className={styles.statusSelect ?? ""}
+          />
+        </div>
       </div>
       {error ? <p className={styles.formError}>{error}</p> : null}
       {detailsError ? <p className={styles.formError}>{detailsError}</p> : null}
@@ -165,6 +219,16 @@ export function DeliveryHistory(): JSX.Element {
                             Cancel
                           </button>
                         ) : null}
+                        <button
+                          type="button"
+                          className={styles.dangerButton}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void removeDelivery(item);
+                          }}
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                     {selected?.id === item.id ? (

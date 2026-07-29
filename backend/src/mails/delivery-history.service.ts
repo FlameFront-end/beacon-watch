@@ -160,6 +160,17 @@ export class DeliveryHistoryService {
     });
   }
 
+  async delete(id: string): Promise<void> {
+    await this.findById(id);
+    await this.eventRepository.delete({ deliveryId: id });
+    await this.deliveryRepository.delete({ id });
+  }
+
+  async deleteAll(): Promise<void> {
+    await this.eventRepository.clear();
+    await this.deliveryRepository.clear();
+  }
+
   private async findById(id: string): Promise<DeliveryEntity> {
     const delivery = await this.deliveryRepository.findOne({ where: { id } });
     if (!delivery) {

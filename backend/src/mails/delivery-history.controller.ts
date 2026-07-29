@@ -57,15 +57,14 @@ export class DeliveryHistoryController {
     return this.deliveryHistoryService.recordEvent(input);
   }
 
+  @Delete()
+  deleteAll(): Promise<void> {
+    return this.deliveryHistoryService.deleteAll();
+  }
+
   @Delete(":id")
-  archive(@Param("id") id: string) {
-    return this.deliveryHistoryService.recordEvent({
-      deliveryId: id,
-      eventId: `archive-${Date.now()}`,
-      source: "beaconwatch",
-      status: "cancelled",
-      message: "Archived by administrator",
-    });
+  delete(@Param("id") id: string): Promise<void> {
+    return this.deliveryHistoryService.delete(id);
   }
 }
 

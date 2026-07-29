@@ -43,10 +43,57 @@ describe("DeliveryHistoryService", () => {
     assert.equal(saved.errorCategory, null);
     assert.equal(saved.errorMessage, null);
   });
+
+  it("deletes one delivery with its events", async () => {
+    const deliveryRepository = createDeliveryRepository(Object.assign(new DeliveryEntity(), {
+      id: "delivery-id",
+      messageId: "<message@beaconwatch.local>",
+    }));
+    const eventRepository = createEventRepository();
+    const service = new DeliveryHistoryService(
+      deliveryRepository,
+      eventRepository,
+      { emitDeliveryEvent() {} },
+    );
+
+    await service.delete("delivery-id");
+
+    assert.deepEqual(eventRepository.deletedCriteria, [{ deliveryId: "delivery-id" }]);
+    assert.deepEqual(deliveryRepository.deletedCriteria, [{ id: "delivery-id" }]);
+  });
+
+  it("clears delivery history tables in dependency order", async () => {
+    const deliveryRepository = createDeliveryRepository(Object.assign(new DeliveryEntity(), {
+      id: "delivery-id",
+    }));
+    const eventRepository = createEventRepository();
+    const service = new DeliveryHistoryService(
+      deliveryRepository,
+      eventRepository,
+      { emitDeliveryEvent() {} },
+    );
+
+    await service.deleteAll();
+
+    assert.equal(eventRepository.wasCleared, true);
+    assert.equal(deliveryRepository.wasCleared, true);
+  });
 });
 
-function createDeliveryRepository(delivery: DeliveryEntity): Repository<DeliveryEntity> {
-  return {
+function createDeliveryRepository(delivery: DeliveryEntity): Repository<DeliveryEntity> & {
+  readonly deletedCriteria: unknown[];
+  wasCleared: boolean;
+} {
+  const repository = {
+    deletedCriteria: [] as unknown[],
+    wasCleared: false,
+    async clear() {
+      repository.wasCleared = true;
+    },
+    async delete(criteria: unknown) {
+      repository.deletedCriteria.push(criteria);
+      return { affected: 1, raw: [] };
+    },
     async findOne() {
       return delivery;
     },
@@ -54,13 +101,30 @@ function createDeliveryRepository(delivery: DeliveryEntity): Repository<Delivery
       Object.assign(delivery, value);
       return delivery;
     },
-  } as Repository<DeliveryEntity>;
+  };
+
+  return repository as Repository<DeliveryEntity> & {
+    readonly deletedCriteria: unknown[];
+    wasCleared: boolean;
+  };
 }
 
-function createEventRepository(): Repository<DeliveryEventEntity> {
-  return {
+function createEventRepository(): Repository<DeliveryEventEntity> & {
+  readonly deletedCriteria: unknown[];
+  wasCleared: boolean;
+} {
+  const repository = {
+    deletedCriteria: [] as unknown[],
+    wasCleared: false,
+    async clear() {
+      repository.wasCleared = true;
+    },
     create(value: Partial<DeliveryEventEntity>) {
       return value as DeliveryEventEntity;
+    },
+    async delete(criteria: unknown) {
+      repository.deletedCriteria.push(criteria);
+      return { affected: 1, raw: [] };
     },
     async findOne() {
       return null;
@@ -68,5 +132,10 @@ function createEventRepository(): Repository<DeliveryEventEntity> {
     async save(value: DeliveryEventEntity) {
       return value;
     },
-  } as Repository<DeliveryEventEntity>;
+  };
+
+  return repository as Repository<DeliveryEventEntity> & {
+    readonly deletedCriteria: unknown[];
+    wasCleared: boolean;
+  };
 }
