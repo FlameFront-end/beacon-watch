@@ -54,9 +54,9 @@ The calculator returns a structured RCE result with:
 - summary;
 - timestamp.
 
-`rceScoreVersion` is always `"rce-v2"` for calculated records. Rows left at
-`rce-v1` were calculated by the superseded model and must not be treated as
-current RCE scoring.
+`rceScoreVersion` is always `"rce-v3"` for calculated records. Rows left at
+`rce-v1` or `rce-v2` were calculated by superseded models and must not be
+treated as current RCE scoring.
 
 ## Backfill contract
 
