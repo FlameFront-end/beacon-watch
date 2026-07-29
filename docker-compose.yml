@@ -17,6 +17,9 @@ services:
       DB_USER: ${DB_USER:?DB_USER is required}
       DB_PASS: ${DB_PASS:?DB_PASS is required}
       DB_NAME: ${DB_NAME:?DB_NAME is required}
+      # Vulnerability timestamps are stored and compared as UTC instants. Pinning the container
+      # clock to UTC keeps log output and any local-time formatting consistent with that.
+      TZ: UTC
       PORT: 3000
       ADMIN_USERNAME: ${ADMIN_USERNAME:?ADMIN_USERNAME is required}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
@@ -53,6 +56,10 @@ services:
       VULN_EXPLOIT_LOOKUP_COOLDOWN_HOURS: ${VULN_EXPLOIT_LOOKUP_COOLDOWN_HOURS:-24}
       VULN_EXPLOIT_CANDIDATE_LIMIT: ${VULN_EXPLOIT_CANDIDATE_LIMIT:-500}
       VULN_EXPLOIT_DB_URL: ${VULN_EXPLOIT_DB_URL:-https://gitlab.com/exploit-database/exploitdb/-/raw/main/files_exploits.csv}
+      VULN_NVD_MAX_PAGES: ${VULN_NVD_MAX_PAGES:-15}
+      VULN_GITHUB_MAX_PAGES: ${VULN_GITHUB_MAX_PAGES:-}
+      VULN_CISA_KEV_MAX_PAGES: ${VULN_CISA_KEV_MAX_PAGES:-1}
+      VULN_RENORMALIZATION_BATCH_SIZE: ${VULN_RENORMALIZATION_BATCH_SIZE:-200}
       VULN_SOURCE_TIMEOUT_MS: ${VULN_SOURCE_TIMEOUT_MS:-15000}
       VULN_NVD_TIMEOUT_MS: ${VULN_NVD_TIMEOUT_MS:-60000}
       VULN_SOURCE_MAX_RETRIES: ${VULN_SOURCE_MAX_RETRIES:-3}
