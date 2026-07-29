@@ -83,11 +83,17 @@ export async function sendMail(request: SendMailRequest): Promise<void> {
   await http.post("/api/smtp/send", request);
 }
 
-export async function getDeliveries(
-  status?: DeliveryStatus,
-): Promise<{ readonly items: DeliveryRecord[]; readonly total: number }> {
+export async function getDeliveries(options: {
+  readonly status?: DeliveryStatus | undefined;
+  readonly offset?: number;
+  readonly limit?: number;
+} = {}): Promise<{ readonly items: DeliveryRecord[]; readonly total: number }> {
   const response = await http.get("/api/smtp/deliveries", {
-    params: status ? { status } : undefined,
+    params: {
+      status: options.status,
+      offset: options.offset,
+      limit: options.limit,
+    },
   });
   return response.data as { readonly items: DeliveryRecord[]; readonly total: number };
 }

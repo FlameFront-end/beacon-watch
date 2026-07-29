@@ -1,6 +1,12 @@
 import unittest
 
-from mailcow_delivery_agent import MESSAGE_ID_PATTERN, canonical_json, delivery_result, error_category
+from mailcow_delivery_agent import (
+    MESSAGE_ID_PATTERN,
+    canonical_json,
+    delivery_result,
+    error_category,
+    smtp_code,
+)
 
 
 class MailcowDeliveryAgentTests(unittest.TestCase):
@@ -9,6 +15,10 @@ class MailcowDeliveryAgentTests(unittest.TestCase):
 
     def test_sent_event_is_delivered(self):
         self.assertEqual(delivery_result("queue: to=<a@b>, status=sent"), ("delivered", None))
+
+    def test_successful_delivery_uses_recipient_smtp_reply_code(self):
+        line = "queue: dsn=2.0.0, status=sent (250 Queued!)"
+        self.assertEqual(smtp_code(line), 250)
 
     def test_message_id_keeps_angle_brackets(self):
         line = "postfix/cleanup[446]: 58B3D124259: message-id=<id@beaconwatch.local>"

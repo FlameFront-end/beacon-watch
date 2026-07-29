@@ -17,6 +17,7 @@ MESSAGE_ID_PATTERN = re.compile(r"message-id=(<[^>]+>)")
 RECIPIENT_PATTERN = re.compile(r"to=<([^>]+)>")
 RELAY_PATTERN = re.compile(r"relay=([^, ]+)")
 SMTP_CODE_PATTERN = re.compile(r"dsn=\d\.(\d)\.(\d)")
+SMTP_REPLY_CODE_PATTERN = re.compile(r"\((\d{3})\b")
 
 
 def canonical_json(value: Any) -> str:
@@ -147,6 +148,10 @@ def error_category(line: str) -> str:
 
 
 def smtp_code(line: str) -> int | None:
+    reply_match = SMTP_REPLY_CODE_PATTERN.search(line)
+    if reply_match:
+        return int(reply_match.group(1))
+
     match = SMTP_CODE_PATTERN.search(line)
     if not match:
         return None
