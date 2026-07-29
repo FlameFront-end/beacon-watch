@@ -7,6 +7,8 @@
     "dev": "tsx watch src/main.ts",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "build": "tsc -p tsconfig.build.json",
+    "backfill:rce-score": "tsx src/vulnerability-monitoring/backfill/rce-score-backfill.command.ts",
+    "backfill:rce-score:prod": "node dist/vulnerability-monitoring/backfill/rce-score-backfill.command.js",
     "start": "node dist/main.js"
   },
   "dependencies": {

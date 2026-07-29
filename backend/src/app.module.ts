@@ -18,6 +18,7 @@ import { BackfillVendorProductFieldSources1785310000000 } from "./database/migra
 import { AddCorporateXssWatchRules1785320000000 } from "./database/migrations/1785320000000-add-corporate-xss-watch-rules.js";
 import { AddPublicExploitEnrichment1785330000000 } from "./database/migrations/1785330000000-add-public-exploit-enrichment.js";
 import { RepairKevDatesAndCpeNormalization1785340000000 } from "./database/migrations/1785340000000-repair-kev-dates-and-cpe-normalization.js";
+import { AddRcePotentialScoring1785350000000 } from "./database/migrations/1785350000000-add-rce-potential-scoring.js";
 import { MailEntity } from "./mails/mail.entity.js";
 import { SmtpSettingsEntity } from "./mails/smtp-settings.entity.js";
 import { MailsModule } from "./mails/mails.module.js";
@@ -73,6 +74,7 @@ import { VulnerabilityMonitoringModule } from "./vulnerability-monitoring/vulner
           AddCorporateXssWatchRules1785320000000,
           AddPublicExploitEnrichment1785330000000,
           RepairKevDatesAndCpeNormalization1785340000000,
+          AddRcePotentialScoring1785350000000,
         ],
         migrationsRun: true,
         synchronize: false,
