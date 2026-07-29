@@ -223,7 +223,7 @@ function DeliveryDetails(props: {
         {deliveredEvent?.mxHost ? <span>Recipient MX: {deliveredEvent.mxHost}</span> : null}
       </div>
       {props.delivery.preview ? <p className={styles.previewText}>{props.delivery.preview}</p> : null}
-      {props.delivery.errorMessage ? (
+      {hasDeliveryError(props.delivery) ? (
         <p className={styles.formError}>{props.delivery.errorCategory}: {props.delivery.errorMessage}</p>
       ) : null}
       <ol className={styles.timeline}>
@@ -231,7 +231,7 @@ function DeliveryDetails(props: {
           <li key={event.id}>
             <strong>{eventTitle(event)}</strong>
             <span>{formatDate(event.createdAt)} · {event.source}</span>
-            <p>{event.message ?? eventDescription(event)}</p>
+            <p>{eventDescription(event)}</p>
           </li>
         ))}
       </ol>
@@ -248,9 +248,27 @@ function eventTitle(event: DeliveryEvent): string {
 
 function eventDescription(event: DeliveryEvent): string {
   if (event.status === "delivered") {
-    return "Recipient mail server accepted the message. Inbox placement is decided by the recipient.";
+    const smtpCode = event.smtpCode ? `SMTP ${event.smtpCode}` : "SMTP 2xx";
+    const mxHost = event.mxHost ? ` via ${event.mxHost}` : "";
+    return `Recipient mail server accepted the message${mxHost} (${smtpCode}). Inbox placement is decided by the recipient.`;
   }
-  return "No additional details";
+  if (event.status === "queued") {
+    return event.queueId ? `Queued in Mailcow as ${event.queueId}.` : "Queued in Mailcow.";
+  }
+  if (event.status === "accepted") {
+    return "Mailcow accepted the message from BeaconWatch SMTP.";
+  }
+  if (event.status === "submitting") {
+    return "BeaconWatch started SMTP submission.";
+  }
+  return event.message ?? "No additional details";
+}
+
+function hasDeliveryError(delivery: DeliveryRecord): boolean {
+  return (
+    Boolean(delivery.errorMessage) &&
+    (delivery.status === "deferred" || delivery.status === "bounced" || delivery.status === "failed")
+  );
 }
 
 function formatDate(value: string): string {

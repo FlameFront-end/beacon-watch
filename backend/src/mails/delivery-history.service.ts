@@ -100,8 +100,9 @@ export class DeliveryHistoryService {
     delivery.updatedAt = new Date();
     delivery.queueId = input.queueId ?? delivery.queueId;
     delivery.attemptCount = Math.max(delivery.attemptCount, input.details?.attempt as number ?? 0);
-    delivery.errorCategory = input.errorCategory ?? null;
-    delivery.errorMessage = input.message ?? null;
+    const hasDeliveryError = input.status === "deferred" || input.status === "bounced" || input.status === "failed";
+    delivery.errorCategory = hasDeliveryError ? input.errorCategory ?? null : null;
+    delivery.errorMessage = hasDeliveryError ? input.message ?? null : null;
     if (TERMINAL_STATUSES.has(input.status)) {
       delivery.completedAt = new Date();
     }
