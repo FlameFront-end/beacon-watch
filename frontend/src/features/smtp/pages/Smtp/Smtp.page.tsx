@@ -11,17 +11,24 @@ import { FileUp, Send, Settings2 } from "lucide-react";
 import {
   getSmtpSettings,
   sendMail,
-  type CalendarInviteRequest,
   updateSmtpSettings,
   type SmtpSettings,
 } from "@/shared/api/smtp";
 import { Button, Checkbox, Panel, Select } from "@/shared/kit";
 import { readHtmlFile } from "@/features/mails/lib/read-html-file";
 import { DeliveryHistory } from "@/features/smtp/components/DeliveryHistory";
+import {
+  buildCalendarInviteRequest,
+  createEmptySmtpSendDraft,
+  normalizeSmtpSendDraft,
+  validateCalendarInviteDraft,
+  type SmtpSendDraft,
+} from "@/features/smtp/lib/smtp-send-draft";
 
 import styles from "./Smtp.module.scss";
 
 type TlsMode = "none" | "starttls" | "implicit";
+const SMTP_SEND_DRAFT_STORAGE_KEY = "beaconwatch:smtp-send-draft";
 
 const TLS_MODE_OPTIONS = [
   { value: "none", label: "None (anonymous relay only)" },
@@ -50,20 +57,19 @@ export function SmtpPage(): JSX.Element {
 
 function SendMailPanel(): JSX.Element {
   const htmlFileInputRef = useRef<HTMLInputElement>(null);
-  const [to, setTo] = useState("");
-  const [subject, setSubject] = useState("");
-  const [text, setText] = useState("");
-  const [isHtml, setIsHtml] = useState(false);
-  const [hasCalendarInvite, setHasCalendarInvite] = useState(false);
-  const [calendarTitle, setCalendarTitle] = useState("");
-  const [calendarStartsAt, setCalendarStartsAt] = useState("");
-  const [calendarEndsAt, setCalendarEndsAt] = useState("");
-  const [calendarLocation, setCalendarLocation] = useState("");
-  const [calendarDescription, setCalendarDescription] = useState("");
+  const [draft, setDraft] = useState<SmtpSendDraft>(readStoredSmtpSendDraft);
   const [importedFileName, setImportedFileName] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+
+    localStorage.setItem(SMTP_SEND_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+  }, [draft]);
 
   async function handleHtmlFileChange(event: ChangeEvent<HTMLInputElement>): Promise<void> {
     const fileInput = event.currentTarget;
@@ -77,8 +83,7 @@ function SendMailPanel(): JSX.Element {
 
     try {
       const importedHtml = await readHtmlFile(htmlFile);
-      setText(importedHtml);
-      setIsHtml(true);
+      updateDraft({ text: importedHtml, isHtml: true });
       setImportedFileName(htmlFile.name);
       setError(null);
     } catch {
@@ -90,35 +95,47 @@ function SendMailPanel(): JSX.Element {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    const calendarError = validateCalendarInviteDraft(draft);
+    if (calendarError) {
+      setStatus(null);
+      setError(calendarError);
+      return;
+    }
+
     setIsSending(true);
     setStatus(null);
     setError(null);
 
     try {
-      const calendarInvite = hasCalendarInvite
-        ? createCalendarInvite({
-            title: calendarTitle,
-            startsAt: calendarStartsAt,
-            endsAt: calendarEndsAt,
-            location: calendarLocation,
-            description: calendarDescription,
-          })
-        : undefined;
+      const calendarInvite = buildCalendarInviteRequest(draft);
       await sendMail({
-        to,
-        subject,
-        ...(isHtml ? { html: text } : { text }),
+        to: draft.to,
+        subject: draft.subject,
+        ...(draft.isHtml ? { html: draft.text } : { text: draft.text }),
         ...(calendarInvite ? { calendarInvite } : {}),
       });
-      setStatus(`SMTP server accepted the message for ${to}`);
+      setStatus(`SMTP server accepted the message for ${draft.to}`);
       window.dispatchEvent(new Event("smtp-delivery-created"));
-      setText("");
-      setImportedFileName(null);
     } catch (sendError: unknown) {
       setError(sendError instanceof Error ? sendError.message : "Failed to send message");
     } finally {
       setIsSending(false);
     }
+  }
+
+  function resetForm(): void {
+    const emptyDraft = createEmptySmtpSendDraft();
+    setDraft(emptyDraft);
+    setImportedFileName(null);
+    setStatus(null);
+    setError(null);
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem(SMTP_SEND_DRAFT_STORAGE_KEY);
+    }
+  }
+
+  function updateDraft(patch: Partial<SmtpSendDraft>): void {
+    setDraft((currentDraft) => ({ ...currentDraft, ...patch }));
   }
 
   return (
@@ -138,8 +155,8 @@ function SendMailPanel(): JSX.Element {
             name="recipient"
             type="email"
             required
-            value={to}
-            onChange={(event) => setTo(event.target.value)}
+            value={draft.to}
+            onChange={(event) => updateDraft({ to: event.target.value })}
             placeholder="recipient@example.com"
           />
         </label>
@@ -148,8 +165,8 @@ function SendMailPanel(): JSX.Element {
           <input
             name="subject"
             required
-            value={subject}
-            onChange={(event) => setSubject(event.target.value)}
+            value={draft.subject}
+            onChange={(event) => updateDraft({ subject: event.target.value })}
             placeholder="Subject"
           />
         </label>
@@ -158,9 +175,9 @@ function SendMailPanel(): JSX.Element {
           <textarea
             name="message"
             required
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            placeholder={isHtml ? "<p>Write an HTML message</p>" : "Write a message"}
+            value={draft.text}
+            onChange={(event) => updateDraft({ text: event.target.value })}
+            placeholder={draft.isHtml ? "<p>Write an HTML message</p>" : "Write a message"}
             rows={8}
           />
         </label>
@@ -175,6 +192,7 @@ function SendMailPanel(): JSX.Element {
             }}
           />
           <Button
+            type="button"
             variant="secondary"
             leftIcon={<FileUp size={15} aria-hidden="true" />}
             onClick={() => htmlFileInputRef.current?.click()}
@@ -189,27 +207,28 @@ function SendMailPanel(): JSX.Element {
           className={styles.htmlToggle}
           name="isHtml"
           label="Render message as HTML"
-          checked={isHtml}
-          onChange={(event) => setIsHtml(event.target.checked)}
+          checked={draft.isHtml}
+          onChange={(event) => updateDraft({ isHtml: event.target.checked })}
         />
         <fieldset className={styles.calendarInvite}>
           <Checkbox
             className={styles.calendarToggle}
             name="hasCalendarInvite"
             label="Add Outlook calendar invite (.ics)"
-            checked={hasCalendarInvite}
-            onChange={(event) => setHasCalendarInvite(event.target.checked)}
+            checked={draft.hasCalendarInvite}
+            onChange={(event) => updateDraft({ hasCalendarInvite: event.target.checked })}
           />
-          {hasCalendarInvite ? (
+          {draft.hasCalendarInvite ? (
             <div className={styles.calendarFields}>
               <label>
                 <span>Meeting title</span>
                 <input
                   name="calendarTitle"
                   required
-                  value={calendarTitle}
-                  onChange={(event) => setCalendarTitle(event.target.value)}
-                  placeholder={subject || "Meeting title"}
+                  maxLength={120}
+                  value={draft.calendarTitle}
+                  onChange={(event) => updateDraft({ calendarTitle: event.target.value })}
+                  placeholder={draft.subject || "Meeting title"}
                 />
               </label>
               <label>
@@ -218,8 +237,8 @@ function SendMailPanel(): JSX.Element {
                   name="calendarStartsAt"
                   type="datetime-local"
                   required
-                  value={calendarStartsAt}
-                  onChange={(event) => setCalendarStartsAt(event.target.value)}
+                  value={draft.calendarStartsAt}
+                  onChange={(event) => updateDraft({ calendarStartsAt: event.target.value })}
                 />
               </label>
               <label>
@@ -228,16 +247,17 @@ function SendMailPanel(): JSX.Element {
                   name="calendarEndsAt"
                   type="datetime-local"
                   required
-                  value={calendarEndsAt}
-                  onChange={(event) => setCalendarEndsAt(event.target.value)}
+                  value={draft.calendarEndsAt}
+                  onChange={(event) => updateDraft({ calendarEndsAt: event.target.value })}
                 />
               </label>
               <label>
                 <span>Location</span>
                 <input
                   name="calendarLocation"
-                  value={calendarLocation}
-                  onChange={(event) => setCalendarLocation(event.target.value)}
+                  maxLength={160}
+                  value={draft.calendarLocation}
+                  onChange={(event) => updateDraft({ calendarLocation: event.target.value })}
                   placeholder="Optional"
                 />
               </label>
@@ -245,8 +265,9 @@ function SendMailPanel(): JSX.Element {
                 <span>Calendar description</span>
                 <textarea
                   name="calendarDescription"
-                  value={calendarDescription}
-                  onChange={(event) => setCalendarDescription(event.target.value)}
+                  maxLength={2000}
+                  value={draft.calendarDescription}
+                  onChange={(event) => updateDraft({ calendarDescription: event.target.value })}
                   placeholder="Optional agenda or joining instructions"
                   rows={3}
                 />
@@ -258,6 +279,9 @@ function SendMailPanel(): JSX.Element {
           <Button type="submit" isLoading={isSending}>
             Send message
           </Button>
+          <Button type="button" variant="secondary" onClick={resetForm}>
+            Reset form
+          </Button>
           {status ? <span className={styles.successMessage}>{status}</span> : null}
           {error ? <span className={styles.formError}>{error}</span> : null}
         </div>
@@ -266,20 +290,21 @@ function SendMailPanel(): JSX.Element {
   );
 }
 
-function createCalendarInvite(input: {
-  readonly title: string;
-  readonly startsAt: string;
-  readonly endsAt: string;
-  readonly location: string;
-  readonly description: string;
-}): CalendarInviteRequest {
-  return {
-    title: input.title.trim(),
-    startsAt: new Date(input.startsAt).toISOString(),
-    endsAt: new Date(input.endsAt).toISOString(),
-    ...(input.location.trim() ? { location: input.location.trim() } : {}),
-    ...(input.description.trim() ? { description: input.description.trim() } : {}),
-  };
+function readStoredSmtpSendDraft(): SmtpSendDraft {
+  if (typeof localStorage === "undefined") {
+    return createEmptySmtpSendDraft();
+  }
+
+  const storedDraft = localStorage.getItem(SMTP_SEND_DRAFT_STORAGE_KEY);
+  if (!storedDraft) {
+    return createEmptySmtpSendDraft();
+  }
+
+  try {
+    return normalizeSmtpSendDraft(JSON.parse(storedDraft));
+  } catch {
+    return createEmptySmtpSendDraft();
+  }
 }
 
 function SmtpSettingsPanel(): JSX.Element {

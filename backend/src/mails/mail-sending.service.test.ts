@@ -98,6 +98,72 @@ describe("MailSendingService", () => {
     assert.deepEqual(sender.sent, []);
   });
 
+  it("rejects calendar invites older than the allowed retention window", async () => {
+    const sender = createMailSender();
+    const service = new MailSendingService(sender);
+
+    await assert.rejects(
+      () =>
+        service.send({
+          to: "recipient@example.com",
+          subject: "Meeting request",
+          text: "Please join the meeting.",
+          calendarInvite: {
+            title: "Project sync",
+            startsAt: "2020-07-01T10:00:00.000Z",
+            endsAt: "2020-07-01T10:30:00.000Z",
+          },
+        }),
+      BadRequestException,
+    );
+
+    assert.deepEqual(sender.sent, []);
+  });
+
+  it("rejects calendar invites longer than 24 hours", async () => {
+    const sender = createMailSender();
+    const service = new MailSendingService(sender);
+
+    await assert.rejects(
+      () =>
+        service.send({
+          to: "recipient@example.com",
+          subject: "Meeting request",
+          text: "Please join the meeting.",
+          calendarInvite: {
+            title: "Project sync",
+            startsAt: "2026-08-01T10:00:00.000Z",
+            endsAt: "2026-08-02T10:00:01.000Z",
+          },
+        }),
+      BadRequestException,
+    );
+
+    assert.deepEqual(sender.sent, []);
+  });
+
+  it("rejects overlong calendar invite fields", async () => {
+    const sender = createMailSender();
+    const service = new MailSendingService(sender);
+
+    await assert.rejects(
+      () =>
+        service.send({
+          to: "recipient@example.com",
+          subject: "Meeting request",
+          text: "Please join the meeting.",
+          calendarInvite: {
+            title: "x".repeat(121),
+            startsAt: "2026-08-01T10:00:00.000Z",
+            endsAt: "2026-08-01T10:30:00.000Z",
+          },
+        }),
+      BadRequestException,
+    );
+
+    assert.deepEqual(sender.sent, []);
+  });
+
   it("passes raw executable HTML to the mail sender unchanged", async () => {
     const sender = createMailSender();
     const service = new MailSendingService(sender);

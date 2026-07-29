@@ -28,6 +28,12 @@ export interface MailSender {
 
 export const MAIL_SENDER = Symbol("MAIL_SENDER");
 
+const MAX_CALENDAR_DURATION_MS = 24 * 60 * 60 * 1000;
+const CALENDAR_PAST_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+const MAX_CALENDAR_TITLE_LENGTH = 120;
+const MAX_CALENDAR_LOCATION_LENGTH = 160;
+const MAX_CALENDAR_DESCRIPTION_LENGTH = 2_000;
+
 @Injectable()
 export class MailSendingService {
   constructor(
@@ -162,11 +168,26 @@ function parseCalendarInvite(value: unknown): CalendarInvite | undefined {
   if (!title) {
     throw new BadRequestException("Calendar invite title is required");
   }
+  if (title.length > MAX_CALENDAR_TITLE_LENGTH) {
+    throw new BadRequestException(`Calendar invite title must be ${MAX_CALENDAR_TITLE_LENGTH} characters or fewer`);
+  }
+  if (location.length > MAX_CALENDAR_LOCATION_LENGTH) {
+    throw new BadRequestException(`Calendar invite location must be ${MAX_CALENDAR_LOCATION_LENGTH} characters or fewer`);
+  }
+  if (description.length > MAX_CALENDAR_DESCRIPTION_LENGTH) {
+    throw new BadRequestException(`Calendar invite description must be ${MAX_CALENDAR_DESCRIPTION_LENGTH} characters or fewer`);
+  }
   if (!startsAt || !endsAt) {
     throw new BadRequestException("Calendar invite start and end dates are required");
   }
   if (endsAt.getTime() <= startsAt.getTime()) {
     throw new BadRequestException("Calendar invite end date must be after the start date");
+  }
+  if (endsAt.getTime() - startsAt.getTime() > MAX_CALENDAR_DURATION_MS) {
+    throw new BadRequestException("Calendar invite duration must be 24 hours or shorter");
+  }
+  if (startsAt.getTime() < Date.now() - CALENDAR_PAST_WINDOW_MS) {
+    throw new BadRequestException("Calendar invite start date is too far in the past");
   }
 
   return {
