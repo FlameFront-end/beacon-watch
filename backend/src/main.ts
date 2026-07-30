@@ -32,7 +32,10 @@ async function bootstrap(): Promise<void> {
 
     response.setHeader("Access-Control-Allow-Origin", "*");
     response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    response.setHeader(
+      "Access-Control-Allow-Headers",
+      request.get("Access-Control-Request-Headers") ?? "Content-Type",
+    );
 
     if (request.method === "OPTIONS") {
       response.sendStatus(204);

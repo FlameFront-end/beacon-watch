@@ -227,6 +227,34 @@ describe("CallbackService", () => {
     assert.deepEqual(order, { sourceIp: "ASC", id: "DESC" });
   });
 
+  it("loads latest callback stats without TypeORM findOne selection conditions", async () => {
+    const latestEvent = {
+      id: "callback-latest",
+      timestamp: new Date("2026-07-30T11:59:00.000Z"),
+    } as CallbackEventEntity;
+    const service = new CallbackService(
+      {
+        count: async () => 1,
+        findOne: async () => {
+          throw new Error("You must provide selection conditions in order to find a single row.");
+        },
+        find: async (options: { readonly take?: number }) => {
+          assert.equal(options.take, 5);
+          return [latestEvent];
+        },
+      } as unknown as Repository<CallbackEventEntity>,
+      { logDirectory: await mkdtemp(join(tmpdir(), "beaconwatch-callback-")) },
+      () => new Date("2026-07-30T12:00:00.000Z"),
+    );
+
+    const stats = await service.latestStatus();
+
+    assert.equal(stats.total, 1);
+    assert.equal(stats.lastHour, 1);
+    assert.equal(stats.latest, latestEvent);
+    assert.deepEqual(stats.latestFive, [latestEvent]);
+  });
+
   it("truncates overlong request fields before storage", async () => {
     let savedEvent: CallbackEventEntity | null = null;
     const service = new CallbackService(

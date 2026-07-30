@@ -114,7 +114,11 @@ export class CallbackService implements OnModuleInit, OnModuleDestroy {
     });
 
     try {
-      return await this.callbackRepository.save(event);
+      const savedEvent = await this.callbackRepository.save(event);
+      this.logger.log(
+        `Stored callback event ${savedEvent.id} from ${sourceIp} target=${savedEvent.targetId ?? "none"}`,
+      );
+      return savedEvent;
     } catch (error: unknown) {
       await this.logError(error, snapshot);
       return {
@@ -172,12 +176,12 @@ export class CallbackService implements OnModuleInit, OnModuleDestroy {
 
   async latestStatus(): Promise<CallbackStats> {
     const oneHourAgo = new Date(this.now().getTime() - 60 * 60 * 1000);
-    const [total, lastHour, latest, latestFive] = await Promise.all([
+    const [total, lastHour, latestFive] = await Promise.all([
       this.callbackRepository.count(),
       this.callbackRepository.count({ where: { timestamp: MoreThanOrEqual(oneHourAgo) } }),
-      this.callbackRepository.findOne({ order: { timestamp: "DESC" } }),
       this.callbackRepository.find({ order: { timestamp: "DESC" }, take: 5 }),
     ]);
+    const latest = latestFive[0] ?? null;
     return { total, lastHour, latest, latestFive };
   }
 
