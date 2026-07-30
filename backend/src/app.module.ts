@@ -23,6 +23,9 @@ import { AddVulnerabilityPrimitive1785450000000 } from "./database/migrations/17
 import { AlterRceScoreConfidenceToReal1785460000000 } from "./database/migrations/1785460000000-alter-rce-score-confidence-to-real.js";
 import { AddVulnerabilityListPerformanceIndexes1785470000000 } from "./database/migrations/1785470000000-add-vulnerability-list-performance-indexes.js";
 import { AddSmtpDeliveryHistory1785500000000 } from "./database/migrations/1785500000000-add-smtp-delivery-history.js";
+import { AddCallbackEvents1785510000000 } from "./database/migrations/1785510000000-add-callback-events.js";
+import { CallbackEventEntity } from "./callback/callback.entity.js";
+import { CallbackModule } from "./callback/callback.module.js";
 import { DeliveryEntity } from "./mails/delivery.entity.js";
 import { DeliveryEventEntity } from "./mails/delivery-event.entity.js";
 import { MailEntity } from "./mails/mail.entity.js";
@@ -60,6 +63,7 @@ import { VulnerabilityMonitoringModule } from "./vulnerability-monitoring/vulner
           MailEntity,
           DeliveryEntity,
           DeliveryEventEntity,
+          CallbackEventEntity,
           SmtpSettingsEntity,
           VulnerabilityEntity,
           VulnerabilitySourceRecordEntity,
@@ -87,6 +91,7 @@ import { VulnerabilityMonitoringModule } from "./vulnerability-monitoring/vulner
           AlterRceScoreConfidenceToReal1785460000000,
           AddVulnerabilityListPerformanceIndexes1785470000000,
           AddSmtpDeliveryHistory1785500000000,
+          AddCallbackEvents1785510000000,
         ],
         migrationsRun: true,
         migrationsTransactionMode: "each",
@@ -98,6 +103,7 @@ import { VulnerabilityMonitoringModule } from "./vulnerability-monitoring/vulner
     AdminNotificationsModule,
     BeaconsModule,
     MailsModule,
+    CallbackModule,
     SseModule,
     VulnerabilityMonitoringModule,
   ],

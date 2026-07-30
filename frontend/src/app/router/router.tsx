@@ -7,6 +7,8 @@ import { BeaconDetailsPage } from "@/features/beacons/pages/BeaconDetails/Beacon
 import { BeaconsDashboardPage } from "@/features/beacons/pages/BeaconsDashboard/BeaconsDashboard.page";
 import { MailsDashboardPage } from "@/features/mails/pages/MailsDashboard/MailsDashboard.page";
 import { AdminNotificationLogsPage } from "@/features/admin-notifications/pages/AdminNotificationLogs/AdminNotificationLogs.page";
+import { CallbackDetailPage } from "@/features/callbacks/pages/CallbackDetailPage";
+import { CallbackPage } from "@/features/callbacks/pages/CallbackPage";
 import { ServicesPage } from "@/features/services/pages/Services/Services.page";
 import { SmtpPage } from "@/features/smtp/pages/Smtp/Smtp.page";
 import { CollectionRunsPage } from "@/features/vulnerability-monitoring/pages/CollectionRuns/CollectionRuns.page";
@@ -28,6 +30,8 @@ export function AppRouter(): ReactElement {
             <Switch>
               <Route path="/" component={ServicesPage} />
               <Route path="/smtp" component={SmtpPage} />
+              <Route path="/callbacks" component={CallbackPage} />
+              <Route path="/callbacks/:id" component={CallbackDetailPage} />
               <Route path="/vulnerability-monitoring" component={VulnerabilityFeedPage} />
               <Route path="/vulnerability-monitoring/sources" component={VulnerabilitySourcesPage} />
               <Route path="/vulnerability-monitoring/watch-rules" component={WatchRulesPage} />

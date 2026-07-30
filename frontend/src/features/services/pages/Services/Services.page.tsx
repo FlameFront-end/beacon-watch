@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import { Link } from "wouter";
-import { ArrowRight, Mail, Radio } from "lucide-react";
+import { ArrowRight, Mail, Radio, Webhook } from "lucide-react";
 
 import {
   getDefaultServicePath,
@@ -8,10 +8,14 @@ import {
   type RegisteredService,
 } from "@/shared/config/services";
 import { Badge, Panel } from "@/shared/kit";
+import { CallbackCard } from "@/features/callbacks/components/CallbackCard";
+import { useCallbackStats } from "@/features/callbacks/hooks/use-callbacks";
 
 import styles from "./Services.module.scss";
 
 export function ServicesPage(): JSX.Element {
+  const { stats } = useCallbackStats();
+
   return (
     <div className={styles.page}>
       <section className={styles.hero}>
@@ -62,6 +66,26 @@ export function ServicesPage(): JSX.Element {
           <ArrowRight size={18} aria-hidden="true" />
         </Panel>
       </Link>
+
+      <Panel className={styles.callbackPanel}>
+        <div className={styles.callbackHeader}>
+          <div className={styles.serviceIcon}>
+            <Webhook size={18} aria-hidden="true" />
+          </div>
+          <div>
+            <h2>Callback Events</h2>
+            <p>Public exploit callback receiver. {stats?.lastHour ?? 0} event(s) in the last hour.</p>
+          </div>
+          <Link href="/callbacks" className={styles.callbackLink}>Open</Link>
+        </div>
+        {stats?.latestFive.length ? (
+          <div className={styles.callbackGrid}>
+            {stats.latestFive.map((event) => <CallbackCard key={event.id} event={event} />)}
+          </div>
+        ) : (
+          <div className={styles.callbackEmpty}>No callback events yet.</div>
+        )}
+      </Panel>
     </div>
   );
 }

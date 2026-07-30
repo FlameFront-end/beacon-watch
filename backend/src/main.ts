@@ -45,6 +45,28 @@ async function bootstrap(): Promise<void> {
   if (corsOrigins.length > 0) {
     app.enableCors({ origin: corsOrigins, credentials: true });
   }
+  app.use(
+    "/api/callback",
+    express.raw({
+      type: (request) => {
+        const contentTypeHeader = request.headers["content-type"];
+        const contentType = Array.isArray(contentTypeHeader)
+          ? contentTypeHeader[0]
+          : contentTypeHeader;
+
+        if (!contentType) {
+          return true;
+        }
+
+        const normalizedContentType = contentType.toLowerCase();
+        return (
+          !normalizedContentType.includes("application/json") &&
+          !normalizedContentType.startsWith("text/")
+        );
+      },
+      limit: TEXT_BODY_LIMIT,
+    }),
+  );
   app.use(express.text({ type: ["text/plain", "text/*"], limit: TEXT_BODY_LIMIT }));
   app.use(express.json({ limit: TEXT_BODY_LIMIT }));
 
@@ -305,6 +327,26 @@ async function bootstrap(): Promise<void> {
                 default: 0,
               },
             },
+            {
+              name: "sortBy",
+              in: "query",
+              required: false,
+              schema: {
+                type: "string",
+                enum: ["timestamp", "sourceIp", "status"],
+                default: "timestamp",
+              },
+            },
+            {
+              name: "sortDirection",
+              in: "query",
+              required: false,
+              schema: {
+                type: "string",
+                enum: ["ASC", "DESC"],
+                default: "DESC",
+              },
+            },
           ],
           responses: {
             "200": {
@@ -441,9 +483,251 @@ async function bootstrap(): Promise<void> {
           },
         },
       },
+      "/api/callback": {
+        post: {
+          tags: ["callbacks"],
+          summary: "Receive an external exploit callback",
+          description:
+            "Public endpoint. It always returns 200 OK so external callback probes do not retry because of storage failures.",
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  additionalProperties: true,
+                },
+              },
+              "text/plain": {
+                schema: {
+                  type: "string",
+                },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Callback accepted",
+            },
+          },
+        },
+        get: {
+          tags: ["callbacks"],
+          summary: "List callback events",
+          parameters: [
+            {
+              name: "sourceIp",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+            },
+            {
+              name: "from",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "date-time" },
+            },
+            {
+              name: "to",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "date-time" },
+            },
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              schema: {
+                type: "integer",
+                minimum: 1,
+                maximum: 200,
+                default: 50,
+              },
+            },
+            {
+              name: "offset",
+              in: "query",
+              required: false,
+              schema: {
+                type: "integer",
+                minimum: 0,
+                default: 0,
+              },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Callback event page",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    required: ["items", "total", "limit", "offset"],
+                    properties: {
+                      items: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/CallbackEvent" },
+                      },
+                      total: { type: "integer" },
+                      limit: { type: "integer" },
+                      offset: { type: "integer" },
+                    },
+                  },
+                },
+              },
+            },
+            "401": {
+              description: "Authentication required",
+            },
+          },
+        },
+        delete: {
+          tags: ["callbacks"],
+          summary: "Delete all callback events",
+          responses: {
+            "204": {
+              description: "Callback events deleted",
+            },
+            "401": {
+              description: "Authentication required",
+            },
+          },
+        },
+      },
+      "/api/callback/status/latest": {
+        get: {
+          tags: ["callbacks"],
+          summary: "Get latest callback status and dashboard counters",
+          responses: {
+            "200": {
+              description: "Latest callback status",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    required: ["latest", "total", "lastHour"],
+                    properties: {
+                      latest: {
+                        nullable: true,
+                        allOf: [{ $ref: "#/components/schemas/CallbackEvent" }],
+                      },
+                      total: { type: "integer" },
+                      lastHour: { type: "integer" },
+                    },
+                  },
+                },
+              },
+            },
+            "401": {
+              description: "Authentication required",
+            },
+          },
+        },
+      },
+      "/api/callback/{id}": {
+        get: {
+          tags: ["callbacks"],
+          summary: "Get one callback event",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: {
+                type: "string",
+                format: "uuid",
+              },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Callback event",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/CallbackEvent" },
+                },
+              },
+            },
+            "401": {
+              description: "Authentication required",
+            },
+            "404": {
+              description: "Callback event not found",
+            },
+          },
+        },
+        delete: {
+          tags: ["callbacks"],
+          summary: "Delete one callback event",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: {
+                type: "string",
+                format: "uuid",
+              },
+            },
+          ],
+          responses: {
+            "204": {
+              description: "Callback event deleted",
+            },
+            "401": {
+              description: "Authentication required",
+            },
+            "404": {
+              description: "Callback event not found",
+            },
+          },
+        },
+      },
     },
     components: {
-      schemas: {},
+      schemas: {
+        CallbackEvent: {
+          type: "object",
+          required: [
+            "id",
+            "timestamp",
+            "sourceIp",
+            "method",
+            "url",
+            "headers",
+            "queryParams",
+            "status",
+          ],
+          properties: {
+            id: { type: "string", format: "uuid" },
+            timestamp: { type: "string", format: "date-time" },
+            sourceIp: { type: "string" },
+            userAgent: { type: "string", nullable: true },
+            method: { type: "string", enum: ["GET", "POST"] },
+            url: { type: "string" },
+            headers: {
+              type: "object",
+              additionalProperties: true,
+            },
+            queryParams: {
+              type: "object",
+              additionalProperties: true,
+            },
+            body: { type: "string", nullable: true },
+            status: {
+              type: "string",
+              enum: ["received", "processed", "error"],
+            },
+            processedAt: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+            },
+            targetId: { type: "string", nullable: true },
+            payload: { type: "string", nullable: true },
+          },
+        },
+      },
     },
   };
   SwaggerModule.setup("api", app, document);

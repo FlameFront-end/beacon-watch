@@ -68,12 +68,20 @@ services:
       VULN_NOTIFICATION_MIN_SCORE: ${VULN_NOTIFICATION_MIN_SCORE:-70}
       VULN_RCE_NOTIFICATION_RULES_ENABLED: ${VULN_RCE_NOTIFICATION_RULES_ENABLED:-false}
       VULN_MAX_CVE_AGE_DAYS: ${VULN_MAX_CVE_AGE_DAYS:-30}
+      CALLBACK_RATE_LIMIT_MAX: ${CALLBACK_RATE_LIMIT_MAX:-120}
+      CALLBACK_RATE_LIMIT_WINDOW_MS: ${CALLBACK_RATE_LIMIT_WINDOW_MS:-60000}
+      CALLBACK_RETENTION_DAYS: ${CALLBACK_RETENTION_DAYS:-30}
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
       - ./logs:/app/logs
     depends_on:
       - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:3000/auth/me', r => process.exit(r.statusCode === 401 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   frontend:
     build:
@@ -83,6 +91,11 @@ services:
       - "443:443"
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-check-certificate -q --spider https://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   beaconwatch-postgres:

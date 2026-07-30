@@ -27,6 +27,14 @@ describe("SessionAuthGuard", () => {
       UnauthorizedException,
     );
   });
+
+  it("allows requests explicitly marked as public", () => {
+    const guard = new SessionAuthGuard(createAuthService(), {
+      getAllAndOverride: () => true,
+    } as never);
+
+    assert.equal(guard.canActivate(createHttpContext()), true);
+  });
 });
 
 function createAuthService(): AuthService {
@@ -47,6 +55,8 @@ function createAuthService(): AuthService {
 
 function createHttpContext(cookie?: string): ExecutionContext {
   return {
+    getHandler: () => createHttpContext,
+    getClass: () => Object,
     switchToHttp: () => ({
       getRequest: () => ({
         headers: {

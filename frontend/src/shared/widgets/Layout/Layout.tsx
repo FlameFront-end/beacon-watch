@@ -1,7 +1,7 @@
 import type { JSX, PropsWithChildren } from "react";
 
 import { Link, useLocation } from "wouter";
-import { Activity, Home, LogOut, Mail, MoonStar, ShieldAlert, SunMedium } from "lucide-react";
+import { Activity, Home, LogOut, Mail, MoonStar, ShieldAlert, SunMedium, Webhook } from "lucide-react";
 import clsx from "clsx";
 
 import { getRegisteredService } from "@/shared/config/services";
@@ -26,6 +26,8 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
       ? "Services"
       : location === "/smtp"
         ? "SMTP"
+        : location.startsWith("/callbacks")
+          ? "Callbacks"
         : location.startsWith("/owa/beacons/")
         ? "Beacon details"
         : location.startsWith("/vulnerability-monitoring")
@@ -71,6 +73,14 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
             >
               <ShieldAlert size={14} aria-hidden="true" />
               <span>Vulnerabilities</span>
+            </Link>
+            <Link
+              href="/callbacks"
+              className={clsx(styles.navLink, location.startsWith("/callbacks") && styles.activeNavLink)}
+              aria-current={location.startsWith("/callbacks") ? "page" : undefined}
+            >
+              <Webhook size={14} aria-hidden="true" />
+              <span>Callbacks</span>
             </Link>
           </nav>
 
